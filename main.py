@@ -1,8 +1,5 @@
-from flask import Flask
-from flask import render_template
-from flask import request
-from flask import redirect
-
+from flask import Flask, render_template
+from flask import request, redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
@@ -12,11 +9,10 @@ from flask_security import RoleMixin, UserMixin
 from flask_security import current_user, login_required
 from flask_security.forms import RegisterForm, LoginForm
 
-from wtforms import StringField, TextAreaField
+from wtforms import StringField, TextAreaField, SelectField
 from wtforms.validators import InputRequired
-from flask_wtf import FlaskForm
+from flask_wtf import FlaskForm 
 from datetime import datetime
-
 
 app = Flask(__name__)
 
@@ -27,11 +23,12 @@ app.config['SECRET_KEY'] = 'Wheresoever you go, go with all your heart.'
 app.config['SECURITY_REGISTERABLE'] = True
 app.config['SECURITY_PASSWORD_SALT'] = 'Pain breeds weakness.'
 app.config['SECURITY_USER_IDENTITY_ATTRIBUTES'] = 'username'
-app.config['SECUIRTY_SEND_REGISTER_EMAIL'] = False
+app.config['SECURITY_SEND_REGISTER_EMAIL'] = False
 app.config['SECURITY_REGISTER_USER_TEMPLATE'] = 'security/register_user.html'
 app.config['SECURITY_LOGIN_USER_TEMPLATE'] = 'security/login_user.html'
 
 # For more useful resources: https://flask-security-too.readthedocs.io/_/downloads/en/stable/pdf/
+
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -43,27 +40,30 @@ roles_users = db.Table('roles_users',
 
 class Role(db.Model, RoleMixin):
     __tablename__ = 'role'
-    id = db.Column(db.Integer(), primary_key = True)
-    name = db.Column(db.String(300), unique = True, nullable = False)
-    description = db.Column(db.String(3000), unique = False, nullable = False)
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(300), unique=True, nullable=False)
+    description = db.Column(db.String(3000), unique=False, nullable=False)
 
 
 class User(db.Model, UserMixin):
     __tablename__ = 'user'
-    id = db.Column(db.Integer(), primary_key = True)
-    email = db.Column(db.String(300), unique = True, nullable = False)
-    password = db.Column(db.String(300), unique = False, nullable = False)
-    name = db.Column(db.String(300), unique = False, nullable = False)
-    username = db.Column(db.String(300), unique = True, nullable = False)
-    sex = db.Column(db.String(10), unique = False, nullable = False)
-    age = db.Column(db.Integer(), unique = False, nullable = False)
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(300), unique=True, nullable=False)
+    password = db.Column(db.String(300), unique=False, nullable=False)
+    name = db.Column(db.String(300), unique=False, nullable=False)
+    username = db.Column(db.String(300), unique=True, nullable=False)
+    age = db.Column(db.Integer, unique=False, nullable=False)
+    sex = db.Column(db.String(30), unique=False, nullable=False)
+    status = db.Column(db.String(30), unique=False, nullable=False)
     active = db.Column(db.Boolean())
     confirmed_at = db.Column(db.DateTime())
-    roles = db.relationship('Role', secondary = roles_users, backref=db.backref('users', lazy='dynamic'))
-    posts = db.relationship('Post', backref='user', lazy='dynamic')
-    comments = db.relationship('Comment', backref='user', lazy='dynamic')
-    groups = db.relationship('Group', backref='user', lazy='dynamic')
+    roles = db.relationship('Role', secondary=roles_users, backref=db.backref('users', lazy='dynamic'))
+    #posts = db.relationship('Post', backref='user', lazy='dynamic')
+    #comments = db.relationship('Comment', backref='user', lazy='dynamic')
+    #groups = db.relationship('Group', backref='user', lazy='dynamic')
 
+
+"""
 class Group(db.Model):
     __tablename__ = 'group'
     id = db.Column(db.Integer(), primary_key = True)
@@ -99,17 +99,26 @@ class New_Post(FlaskForm):
 
 class New_Comment(FlaskForm):
     content = TextAreaField('Comment')
+"""
 
 class ExtendRegisterForm(RegisterForm):
     name = StringField('Name')
     username = StringField('Username')
+    age = StringField("Age")
+    sex = SelectField("Sex", choices=[('male', 'Male'), ('female', 'Female')])
+    status = SelectField("Status", choices=[('school_student', 'School Student'), 
+                                            ('high_school_student', 'High School Sttdent'),
+                                            ('college_school_student', 'College School Student'),
+                                            ('employed_graduated_student', 'Employed Graduated Student'), 
+                                            ('unemployed_graduated_student', 'Unemployed Graduated Student')])
 
 class ExtendLoginForm(LoginForm):
     email = StringField('Username', [InputRequired()])
 
+
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore, register_form=ExtendRegisterForm, login_form=ExtendLoginForm)
 
-@app.route('/', methods = ['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def index():
     return render_template('index.html')

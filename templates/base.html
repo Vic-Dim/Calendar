@@ -1,3 +1,8 @@
+<!-- This will be the base file, which we will extend in the other files. We make this file,
+because we don't want to have a duplicate parts of the code in the different template files. 
+The style is made with Bootstrap 3.3.6 and a self made CSS file in the "static" directory.
+The resources of Boostrap 3.3.6 can be found here: https://blog.getbootstrap.com/2015/11/24/bootstrap-3-3-6-released/ -->
+
 <!DOCTYPE html>
 <html lang="">
     <head>
@@ -7,5 +12,23 @@
         <title>{% block title %}{% endblock %}</title>
     </head>
     <body>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12 col-lg-offset-0">
+                    <div class="menu">
+                        <a href="{{ url_for('index') }}" class="m-item"> Home </a> | 
+                        {% if current_user.active %} 
+                        <a href="{{ url_for_security('logout') }}" class="m-item"> Logout </a>
+                        {% else %}
+                        <a href="{{ url_for_security('register') }}" class="m-item"> Register </a> |
+                        <a href="{{ url_for_security('login') }}" class="m-item"> Login </a>
+                        {% endif %}                   
+                    </div>
+
+                    {% block body %}{% endblock %}
+
+            </div>
+        </div>
+    </div>
     </body>
 </html>
