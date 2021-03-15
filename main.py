@@ -211,6 +211,24 @@ def group(group_id):
     users = group.users
     return render_template('group.html', group=group, form=form, posts=posts, users=users, current_user=current_user)
 
+@app.route('/post/<post_id>', methods=['GET', 'POST'])
+def post(post_id):
+	post = Post.query.get(int(post_id))
+
+	if request.method == 'POST':
+		try:
+			new_comment = Comment(content=request.form['new_content'], date_created=datetime.now(), user_id=current_user.id, post_id=post.id)
+			post.comments.append(new_comment)
+			db.session.commit()
+		except:
+			return "There was a problem adding a new comment on this post!"			
+
+		return redirect(request.referrer)
+
+	else:
+		comments = Comment.query.filter_by(post_id=post_id).all()
+		return render_template('post.html', post=post, comments=comments, current_user=current_user)
+
 
 @app.route('/apply_for_group/<group_id>', methods = ['GET', 'POST'])
 def apply_for_group(group_id):
@@ -218,14 +236,13 @@ def apply_for_group(group_id):
 	
 	if request.method == 'POST':
 		
-		text = request.form['appliance_content']
 		admin = Admin.query.filter_by(id=group.admin_id).first()
 		
-		appliance = Apply(content=text, user_id=current_user.id, admin_id=admin.id)
+		appliance = Apply(content=request.form['appliance_content'], user_id=current_user.id, admin_id=admin.id)
 		db.session.add(appliance)
 		db.session.commit()
 	
-		return redirect('/')
+		return redirect(request.referrer)
 	
 	else:
 		return render_template('apply_for_group.html', current_user=current_user, group=group)
@@ -247,7 +264,7 @@ def apply(apply_id):
 	
 	if request.method == 'POST':
 		
-		answer = request.form['answer']
+		answer = request.form.getlist('answer')
 		group = Group.query.filter_by(admin_id=admin.id).first()
 	
 		if answer == "Yes" and group not in user.groups:
@@ -256,12 +273,62 @@ def apply(apply_id):
 		db.session.delete(appliance)
 		db.session.commit()
 	
-		return redirect('/')
+		return redirect(request.referrer)
 	
 	else:
-		return render_template('apply.html', content=content, user=user, apply_id=apply_id)
+		return render_template('apply.html', content=Apply.query.get(int(apply_id)).content, user=user, apply_id=apply_id)
 
-@app.route('/delete/<int:id>')
+@app.route('/update_group/<group_id>', methods = ['POST', 'GET'])
+def update_group(group_id):
+	group = Group.query.get(int(group_id))
+		
+	if request.method == 'POST':	
+		
+		new_title = request.form['new_title']
+		new_content = request.form['new_content']
+		group.name = new_title
+		group.description = new_content	
+	
+		db.session.commit()
+	
+		return redirect(request.referrer)
+	
+	else:
+		return render_template('update_group.html', group=group)	
+	
+@app.route('/update_post/<post_id>', methods = ['POST', 'GET'])
+def update_post(post_id):
+	post = Post.query.get(int(post_id))
+		
+	if request.method == 'POST':	
+		
+		new_content = request.form['new_content']
+		post.content = new_content	
+	
+		db.session.commit()
+	
+		return redirect(request.referrer)
+	
+	else:
+		return render_template('update_post.html', post=post)	
+
+@app.route('/update_comment/<comment_id>', methods = ['POST', 'GET'])
+def update_comment(comment_id):
+	comment = Comment.query.get(int(comment_id))
+		
+	if request.method == 'POST':	
+		
+		new_content = request.form['new_content']
+		comment.content = new_content	
+	
+		db.session.commit()
+	
+		return redirect(request.referrer)
+	
+	else:
+		return render_template('update_comment.html', comment=comment)	
+
+@app.route('/delete_group/<int:id>')
 def delete_group(id):
     group_to_delete = Group.query.get(int(id))
 
@@ -271,3 +338,25 @@ def delete_group(id):
         return redirect(request.referrer)
     except:
         return "There was a problem deleting this group!"
+        
+@app.route('/delete_post/<int:id>')
+def delete_post(id):
+    post_to_delete = Post.query.get(int(id))
+
+    try:
+        db.session.delete(post_to_delete)
+        db.session.commit()
+        return redirect(request.referrer)
+    except:
+        return "There was a problem deleting this post!"     
+        
+@app.route('/delete_comment/<int:id>')
+def delete_comment(id):
+    comment_to_delete = Comment.query.get(int(id))
+
+    try:
+        db.session.delete(comment_to_delete)
+        db.session.commit()
+        return redirect(request.referrer)
+    except:
+        return "There was a problem deleting this comment!"           
