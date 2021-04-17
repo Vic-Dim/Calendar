@@ -3,6 +3,8 @@ from flask import request, redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
+from functools import wraps
+
 from flask_security import Security
 from flask_security import SQLAlchemyUserDatastore
 from flask_security import RoleMixin, UserMixin
@@ -118,11 +120,14 @@ class Comment(db.Model):
     post_id = db.Column(db.Integer(), db.ForeignKey('post.id'))
 
 class Apply(db.Model):
-	__tablename__ = 'apply'
-	id = db.Column(db.Integer(), primary_key = True)
-	content = db.Column(db.String(1000), unique = False, nullable = False)
-	user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
-	admin_id = db.Column(db.Integer(), db.ForeignKey('admin.id'))
+    __tablename__ = 'apply'
+    id = db.Column(db.Integer(), primary_key = True)
+    content = db.Column(db.String(1000), unique = False, nullable = False)
+    user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
+    admin_id = db.Column(db.Integer(), db.ForeignKey('admin.id'))
+    group_id = db.Column(db.Integer(), db.ForeignKey('group.id'))
+    username = db.Column(db.String(300), unique=True, nullable=False)
+    group_name = db.Column(db.String(300))  
 
 
 class New_Group(FlaskForm):
@@ -154,6 +159,14 @@ class ExtendLoginForm(LoginForm):
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore, register_form=ExtendRegisterForm, login_form=ExtendLoginForm)
 
+def require_login(func):
+	@wraps(func)
+	def wrapper(*args, **kwargs):
+		if not current_user.is_authenticated:
+			return redirect('/login')
+		return func(*args, **kwargs)
+	return wrapper
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     return render_template('index.html')
@@ -170,6 +183,7 @@ def invitations():
     return render_template('invitations.html', current_user=current_user)
 
 @app.route('/all_groups', methods=['GET', 'POST'])
+@require_login
 def all_groups():
 
     form = New_Group()
@@ -195,6 +209,7 @@ def all_groups():
     return render_template('all_groups.html', form=form, groups=groups, current_user=current_user)
 
 @app.route('/group/<group_id>', methods=['GET', 'POST'])
+@require_login
 def group(group_id):
     form = New_Post()
     group = Group.query.get(int(group_id))
@@ -212,25 +227,31 @@ def group(group_id):
     return render_template('group.html', group=group, form=form, posts=posts, users=users, current_user=current_user)
 
 @app.route('/post/<post_id>', methods=['GET', 'POST'])
+@require_login
 def post(post_id):
-	post = Post.query.get(int(post_id))
 
-	if request.method == 'POST':
-		try:
-			new_comment = Comment(content=request.form['new_content'], date_created=datetime.now(), user_id=current_user.id, post_id=post.id)
-			post.comments.append(new_comment)
-			db.session.commit()
-		except:
-			return "There was a problem adding a new comment on this post!"			
+    post = Post.query.get(int(post_id))
+    
+    if not post.group_id in current_user.groups:
+        return redirect('/all_groups')
 
-		return redirect(request.referrer)
+    if request.method == 'POST':
+         try:
+            new_comment = Comment(content=request.form['new_content'], date_created=datetime.now(), user_id=current_user.id, post_id=post.id)
+            post.comments.append(new_comment)
+            db.session.commit()
+         except:
+            return "There was a problem adding a new comment on this post!"			
 
-	else:
-		comments = Comment.query.filter_by(post_id=post_id).all()
-		return render_template('post.html', post=post, comments=comments, current_user=current_user)
+         return redirect(request.referrer)
+
+    else:
+        comments = Comment.query.filter_by(post_id=post_id).all()
+        return render_template('post.html', post=post, comments=comments, current_user=current_user)
 
 
 @app.route('/apply_for_group/<group_id>', methods = ['GET', 'POST'])
+@require_login
 def apply_for_group(group_id):
 	group = Group.query.get(int(group_id))
 	
@@ -238,7 +259,7 @@ def apply_for_group(group_id):
 		
 		admin = Admin.query.filter_by(id=group.admin_id).first()
 		
-		appliance = Apply(content=request.form['appliance_content'], user_id=current_user.id, admin_id=admin.id)
+		appliance = Apply(content=request.form['appliance_content'], user_id=current_user.id, admin_id=admin.id, group_id=group.id, username = current_user.username, group_name = group.name)
 		db.session.add(appliance)
 		db.session.commit()
 	
@@ -250,21 +271,22 @@ def apply_for_group(group_id):
 @app.route('/join_requests')
 def join_requests():		
 	
-	appliances = Apply.query.filter_by(admin_id = current_user.id).all()
-	
-	return render_template('join_requests.html', appliances=appliances)	
+    applications = Apply.query.filter_by(admin_id = current_user.id).all()
 
-@app.route('/apply/<apply_id>', methods = ['POST', 'GET'])
+    return render_template('join_requests.html', applications=applications)	
+
+@app.route('/apply/<int:apply_id>', methods = ['POST', 'GET'])
+@require_login
 def apply(apply_id):
 	
-	appliance = Apply.query.get(int(apply_id))
+	appliance = Apply.query.filter_by(id = apply_id).first()
 	content = appliance.content
 	user = User.query.filter_by(id=appliance.user_id).first()	
 	admin = Admin.query.filter_by(id=appliance.admin_id).first()
 	
 	if request.method == 'POST':
 		
-		answer = request.form.getlist('answer')
+		answer = request.form['answer']
 		group = Group.query.filter_by(admin_id=admin.id).first()
 	
 		if answer == "Yes" and group not in user.groups:
@@ -273,12 +295,13 @@ def apply(apply_id):
 		db.session.delete(appliance)
 		db.session.commit()
 	
-		return redirect(request.referrer)
+		return redirect('/all_groups')
 	
 	else:
-		return render_template('apply.html', content=Apply.query.get(int(apply_id)).content, user=user, apply_id=apply_id)
+		return render_template('apply.html', content=content, user=user, apply_id=apply_id)
 
 @app.route('/update_group/<group_id>', methods = ['POST', 'GET'])
+@require_login
 def update_group(group_id):
 	group = Group.query.get(int(group_id))
 		
@@ -297,24 +320,33 @@ def update_group(group_id):
 		return render_template('update_group.html', group=group)	
 	
 @app.route('/update_post/<post_id>', methods = ['POST', 'GET'])
+@require_login
 def update_post(post_id):
-	post = Post.query.get(int(post_id))
+    post_to_delete = Post.query.get(int(post_id))	
 		
-	if request.method == 'POST':	
+    if post_to_delete.user_id != current_user.id:
+        return redirect('/all_groups')	
 		
-		new_content = request.form['new_content']
-		post.content = new_content	
+    if request.method == 'POST':		
+		
+        new_content = request.form['new_content']
+        post.content = new_content	
 	
-		db.session.commit()
+        db.session.commit()
 	
-		return redirect(request.referrer)
+        return redirect(request.referrer)
 	
-	else:
-		return render_template('update_post.html', post=post)	
+    else:
+	
+        return render_template('update_post.html', post=post)	
 
 @app.route('/update_comment/<comment_id>', methods = ['POST', 'GET'])
+@require_login
 def update_comment(comment_id):
 	comment = Comment.query.get(int(comment_id))
+		
+	if comment_to_delete.user_id != current_user.id:
+		return redirect('/all_groups')	
 		
 	if request.method == 'POST':	
 		
@@ -329,6 +361,7 @@ def update_comment(comment_id):
 		return render_template('update_comment.html', comment=comment)	
 
 @app.route('/delete_group/<int:id>')
+@require_login
 def delete_group(id):
     group_to_delete = Group.query.get(int(id))
 
@@ -340,8 +373,12 @@ def delete_group(id):
         return "There was a problem deleting this group!"
         
 @app.route('/delete_post/<int:id>')
+@require_login
 def delete_post(id):
     post_to_delete = Post.query.get(int(id))
+
+    if post_to_delete.user_id != current_user.id:
+        return redirect('/all_groups')
 
     try:
         db.session.delete(post_to_delete)
@@ -351,8 +388,12 @@ def delete_post(id):
         return "There was a problem deleting this post!"     
         
 @app.route('/delete_comment/<int:id>')
+@require_login
 def delete_comment(id):
     comment_to_delete = Comment.query.get(int(id))
+	
+    if comment_to_delete.user_id != current_user.id:
+        return redirect('/all_groups')		
 
     try:
         db.session.delete(comment_to_delete)
