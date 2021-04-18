@@ -43,9 +43,17 @@ groups_users = db.Table('groups_users',
     db.Column('user_id', db.Integer(), db.ForeignKey('user.id')),
     db.Column('group_id', db.Integer(), db.ForeignKey('group.id')))
 
+events_posts = db.Table('events_posts',
+    db.Column('event_post_id', db.Integer(), db.ForeignKey('event_post.id')),
+    db.Column('post_id', db.Integer(), db.ForeignKey('post.id')))
+
+events_comments = db.Table('events_comments',
+    db.Column('event_comment_id', db.Integer(), db.ForeignKey('event_comment.id')),
+    db.Column('comment_id', db.Integer(), db.ForeignKey('comment.id')))
 
 class Role(db.Model, RoleMixin):
     __tablename__ = 'role'
+    
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(300), unique=True, nullable=False)
     description = db.Column(db.String(3000), unique=False, nullable=False)
@@ -59,10 +67,11 @@ class User(db.Model, UserMixin):
     name = db.Column(db.String(300), unique=False, nullable=False)
     username = db.Column(db.String(300), unique=True, nullable=False)
     age = db.Column(db.Integer(), unique=False, nullable=False)
-    sex = db.Column(db.String(30), unique=False, nullable=False)
+    gender = db.Column(db.String(30), unique=False, nullable=False)
     status = db.Column(db.String(30), unique=False, nullable=False)
     active = db.Column(db.Boolean())
     confirmed_at = db.Column(db.DateTime(), default = datetime.now())
+    
     roles = db.relationship('Role', secondary=roles_users, backref=db.backref('users', lazy='dynamic'))
     groups = db.relationship('Group', secondary=groups_users, backref=db.backref('users', lazy='dynamic'))
     posts = db.relationship('Post', backref='post', lazy='dynamic')
@@ -76,19 +85,20 @@ class Admin(db.Model):
     name = db.Column(db.String(300), unique=False, nullable=False)
     username = db.Column(db.String(300), unique=True, nullable=False)
     age = db.Column(db.Integer(), unique=False, nullable=False)
-    sex = db.Column(db.String(30), unique=False, nullable=False)
+    gender = db.Column(db.String(30), unique=False, nullable=False)
     status = db.Column(db.String(30), unique=False, nullable=False)
     confirmed_at = db.Column(db.DateTime(), default = datetime.now())
+    
     groups = db.relationship('Group', backref='group', lazy='dynamic')
 
-    def __init__(self, id, email, password, name, username, age, sex, status, confirmed_at):
+    def __init__(self, id, email, password, name, username, age, gender, status, confirmed_at):
         self.id = id
         self.email = email
         self.password = password
         self.name = name
         self.username = username
         self.age = age
-        self.sex = sex
+        self.gender = gender
         self.status = status
         self.confirmed_at = confirmed_at
 
@@ -98,6 +108,7 @@ class Group(db.Model):
     name = db.Column(db.String(300))
     description = db.Column(db.String(3000))
     date_created = db.Column(db.DateTime())
+    
     admin_id = db.Column(db.Integer(), db.ForeignKey('admin.id'))
     posts = db.relationship('Post', backref='group', lazy='dynamic')
 
@@ -108,26 +119,62 @@ class Post(db.Model):
     content = db.Column(db.String(300), unique = False, nullable = False)
     date_created = db.Column(db.DateTime())
     comments = db.relationship('Comment', backref='post', lazy='dynamic')
+    
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
     group_id = db.Column(db.Integer(), db.ForeignKey('group.id'))
 
 class Comment(db.Model):
     __tablename__ = 'comment'
+    
     id = db.Column(db.Integer(), primary_key = True)
     content = db.Column(db.String, unique = False, nullable = False)
     date_created = db.Column(db.DateTime())
+    
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
     post_id = db.Column(db.Integer(), db.ForeignKey('post.id'))
+
+class EventPost(db.Model):
+    __tablename__ = 'event_post'
+
+    id = db.Column(db.Integer(), primary_key = True)
+    content = db.Column(db.String(30), unique = False, nullable = False)
+    date_happening = db.Column(db.DateTime(), default = datetime.now())
+    date_event = db.Column(db.DateTime(), default = datetime.now())
+
+    posts = db.relationship('Post', secondary = events_posts, backref = db.backref('event_posts', lazy = 'dynamic'))
+
+class EventComment(db.Model):
+    __tablename__ = 'event_comment'
+
+    id = db.Column(db.Integer(), primary_key = True)
+    content = db.Column(db.String(30), unique = False, nullable = False)
+    date_happening = db.Column(db.DateTime(), default = datetime.now())
+    date_event = db.Column(db.DateTime(), default = datetime.now())
+
+    comments = db.relationship('Comment', secondary = events_comments, backref = db.backref('events_comments', lazy = 'dynamic'))
+
+class Event(db.Model):
+    __tablename__ = 'event_general'
+
+    id = db.Column(db.Integer(), primary_key = True)
+    content = db.Column(db.String(30), unique = False, nullable = False)
+    date_happening = db.Column(db.DateTime(), default = datetime.now())
+    date_event = db.Column(db.DateTime(), default = datetime.now())
+    text_value = db.Column(db.String(30), unique = False, nullable = False)
+    is_linked_post = db.Column(db.Boolean())
+    is_linked_comment = db.Column(db.Boolean())
 
 class Apply(db.Model):
     __tablename__ = 'apply'
     id = db.Column(db.Integer(), primary_key = True)
     content = db.Column(db.String(1000), unique = False, nullable = False)
+    username = db.Column(db.String(300), unique=True, nullable=False)
+    group_name = db.Column(db.String(300))  
+    
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
     admin_id = db.Column(db.Integer(), db.ForeignKey('admin.id'))
     group_id = db.Column(db.Integer(), db.ForeignKey('group.id'))
-    username = db.Column(db.String(300), unique=True, nullable=False)
-    group_name = db.Column(db.String(300))  
+   
 
 
 class New_Group(FlaskForm):
@@ -144,8 +191,15 @@ class New_Comment(FlaskForm):
 class ExtendRegisterForm(RegisterForm):
     name = StringField('Name')
     username = StringField('Username')
-    age = StringField("Age")
-    sex = SelectField("Sex", choices=[('Male', 'Male'), ('Female', 'Female')])
+    
+   	age = SelectField('Age', choices = [('13', '13'), ('14', '14'), ('15', '15'),
+                                        ('16', '16'), ('17', '17'), ('18', '18'),
+                                        ('19', '19'), ('20', '20'), ('21', '21'),
+                                        ('22', '22'), ('23', '23'), ('24', '24'),
+                                        ('25', '25'), ('26', '26'), ('27', '27'),
+                                        ('28', '28'), ('29', '29'), ('30', '30'),
+                                        ('31', '31'), ('32', '32'), ('33', '33')])
+    gender = SelectField("Sex", choices=[('Male', 'Male'), ('Female', 'Female')])
     status = SelectField("Status", choices=[('School Student', 'School Student'), 
                                             ('High School Student', 'High School Student'),
                                             ('College Student', 'College Student'),
@@ -191,7 +245,7 @@ def all_groups():
     if request.method == 'POST' and form.validate_on_submit():
         new_group = Group(name=form.name.data, description=form.description.data, date_created=datetime.now())
         new_admin = Admin(current_user.id, current_user.email, current_user.password, current_user.name, current_user.username,
-                            current_user.age, current_user.sex, current_user.status, current_user.confirmed_at)
+                            current_user.age, current_user.gender, current_user.status, current_user.confirmed_at)
         new_group.admin_id = new_admin.id
         db.session.add(new_group)
         db.session.commit()
@@ -400,4 +454,8 @@ def delete_comment(id):
         db.session.commit()
         return redirect(request.referrer)
     except:
-        return "There was a problem deleting this comment!"           
+        return "There was a problem deleting this comment!"       
+        
+@app.route('/calendar_view', methods = ['GET', 'POST'])
+def calendar_view():
+    return render_template('calendar_view.html')            
