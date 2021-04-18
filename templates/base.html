@@ -21,6 +21,7 @@
                         <a href="{{ url_for_security('logout') }}" class="m-item"> Logout </a>
                         <a href="{{ url_for('profile') }}" class="m-item"> Profile </a>
                         <a href="{{ url_for('invitations') }}" class="m-item"> Invitations </a>
+                        <a href="{{ url_for('calendar_view') }}" class="m-item"> Calendar </a>
                         {% else %}
                         <a href="{{ url_for_security('register') }}" class="m-item"> Register </a> 
                         <a href="{{ url_for_security('login') }}" class="m-item"> Login </a>
