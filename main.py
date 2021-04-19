@@ -11,7 +11,7 @@ from flask_security import RoleMixin, UserMixin
 from flask_security import current_user, login_required
 from flask_security.forms import RegisterForm, LoginForm
 
-from wtforms import StringField, TextAreaField, SelectField
+from wtforms import StringField, TextAreaField, SelectField, DateField
 from wtforms.validators import InputRequired
 from flask_wtf import FlaskForm 
 from datetime import datetime
@@ -43,13 +43,9 @@ groups_users = db.Table('groups_users',
     db.Column('user_id', db.Integer(), db.ForeignKey('user.id')),
     db.Column('group_id', db.Integer(), db.ForeignKey('group.id')))
 
-events_posts = db.Table('events_posts',
-    db.Column('event_post_id', db.Integer(), db.ForeignKey('event_post.id')),
-    db.Column('post_id', db.Integer(), db.ForeignKey('post.id')))
-
-events_comments = db.Table('events_comments',
-    db.Column('event_comment_id', db.Integer(), db.ForeignKey('event_comment.id')),
-    db.Column('comment_id', db.Integer(), db.ForeignKey('comment.id')))
+events_to_posts = db.Table('events_to_posts',
+	db.Column('event_id', db.Integer(), db.ForeignKey('event.id')),
+	db.Column('post_id', db.Integer(), db.ForeignKey('post.id')))
 
 class Role(db.Model, RoleMixin):
     __tablename__ = 'role'
@@ -121,7 +117,8 @@ class Post(db.Model):
     comments = db.relationship('Comment', backref='post', lazy='dynamic')
     
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
-    group_id = db.Column(db.Integer(), db.ForeignKey('group.id'))
+    event_id = db.Column(db.Integer(), db.ForeignKey('event.id'), nullable=True)
+    group_id = db.Column(db.Integer(), db.ForeignKey('group.id'), nullable=True)
 
 class Comment(db.Model):
     __tablename__ = 'comment'
@@ -133,36 +130,16 @@ class Comment(db.Model):
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
     post_id = db.Column(db.Integer(), db.ForeignKey('post.id'))
 
-class EventPost(db.Model):
-    __tablename__ = 'event_post'
-
-    id = db.Column(db.Integer(), primary_key = True)
-    content = db.Column(db.String(30), unique = False, nullable = False)
-    date_happening = db.Column(db.DateTime(), default = datetime.now())
-    date_event = db.Column(db.DateTime(), default = datetime.now())
-
-    posts = db.relationship('Post', secondary = events_posts, backref = db.backref('event_posts', lazy = 'dynamic'))
-
-class EventComment(db.Model):
-    __tablename__ = 'event_comment'
-
-    id = db.Column(db.Integer(), primary_key = True)
-    content = db.Column(db.String(30), unique = False, nullable = False)
-    date_happening = db.Column(db.DateTime(), default = datetime.now())
-    date_event = db.Column(db.DateTime(), default = datetime.now())
-
-    comments = db.relationship('Comment', secondary = events_comments, backref = db.backref('events_comments', lazy = 'dynamic'))
-
 class Event(db.Model):
-    __tablename__ = 'event_general'
+    __tablename__ = 'event'
 
-    id = db.Column(db.Integer(), primary_key = True)
-    content = db.Column(db.String(30), unique = False, nullable = False)
+    id = db.Column(db.Integer(), primary_key = True)    
+    name = db.Column(db.String(30), unique = False, nullable = False)
     date_happening = db.Column(db.DateTime(), default = datetime.now())
     date_event = db.Column(db.DateTime(), default = datetime.now())
-    text_value = db.Column(db.String(30), unique = False, nullable = False)
-    is_linked_post = db.Column(db.Boolean())
-    is_linked_comment = db.Column(db.Boolean())
+   	
+    user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
+    posts = db.relationship('Post', secondary=events_to_posts, backref = db.backref('events', lazy = 'dynamic'))
 
 class Apply(db.Model):
     __tablename__ = 'apply'
@@ -187,12 +164,15 @@ class New_Post(FlaskForm):
 class New_Comment(FlaskForm):
     content = TextAreaField('Content')
 
+class New_Event(FlaskForm):
+    name = StringField('Name')
+    date = DateField('Date', format='%Y-%m-%d')
 
 class ExtendRegisterForm(RegisterForm):
     name = StringField('Name')
     username = StringField('Username')
     
-   	age = SelectField('Age', choices = [('13', '13'), ('14', '14'), ('15', '15'),
+    age = SelectField('Age', choices = [('13', '13'), ('14', '14'), ('15', '15'),
                                         ('16', '16'), ('17', '17'), ('18', '18'),
                                         ('19', '19'), ('20', '20'), ('21', '21'),
                                         ('22', '22'), ('23', '23'), ('24', '24'),
@@ -285,23 +265,42 @@ def group(group_id):
 def post(post_id):
 
     post = Post.query.get(int(post_id))
+    comment_form = New_Comment()
     
-    if not post.group_id in current_user.groups:
+    if not post.group_id in current_user.groups and not post.group_id:
         return redirect('/all_groups')
 
-    if request.method == 'POST':
-         try:
-            new_comment = Comment(content=request.form['new_content'], date_created=datetime.now(), user_id=current_user.id, post_id=post.id)
-            post.comments.append(new_comment)
-            db.session.commit()
-         except:
-            return "There was a problem adding a new comment on this post!"			
+    if request.method == 'POST':    
+        if comment_form.validate_on_submit():
+            try:
+                new_comment = Comment(content=form.data.content, date_created=datetime.now(), user_id=current_user.id, post_id=post.id)
+                post.comments.append(new_comment)
+                db.session.commit()
+         	
+            except:
+            	return "There was a problem adding a new comment on this post!"			
 
-         return redirect(request.referrer)
+
+        else:
+            event_id = request.form['event']
+            event = Event.query.get(int(event_id))
+            post.events.append(event)
+            event.posts.append(post)
+            db.session.commit()
+            return redirect('post/<int:id>')
+			
 
     else:
         comments = Comment.query.filter_by(post_id=post_id).all()
-        return render_template('post.html', post=post, comments=comments, current_user=current_user)
+        linked_to = post.events
+        all_events = Event.query.all()
+        unlinked = []
+        
+        for event in all_events:
+        	if not event in linked_to:
+        		unlinked.append(event)
+        
+        return render_template('post.html', post=post, comments=comments, form=comment_form, linked_to=linked_to, unlinked=unlinked, current_user=current_user)
 
 
 @app.route('/apply_for_group/<group_id>', methods = ['GET', 'POST'])
@@ -457,5 +456,101 @@ def delete_comment(id):
         return "There was a problem deleting this comment!"       
         
 @app.route('/calendar_view', methods = ['GET', 'POST'])
+@require_login
 def calendar_view():
-    return render_template('calendar_view.html')            
+
+	form = New_Event()
+	if request.method == 'POST' and form.validate_on_submit():
+		
+		new_event = Event(name=form.name.data, date_happening=form.date.data, user_id=current_user.id)
+		db.session.add(new_event)
+		db.session.commit()
+
+		return redirect('/calendar_view')
+
+	else:
+		events = Event.query.all()
+		return render_template('calendar_view.html', events=events, form=form)
+		
+@app.route('/events/<int:id>', methods = ['GET', 'POST'])
+@require_login
+def event(id):
+
+	post_form = New_Post()
+	event = Event.query.get(int(id))
+	
+	if request.method == "POST":
+	
+		if post_form.validate_on_submit():
+			
+			post = Post(user_id=current_user.id, content = post_form.content.data, date_created=datetime.now())
+			db.session.add(post)
+			event.posts.append(post)
+			post.events.append(event)
+			db.session.commit()
+			return redirect('/calendar_view')
+
+		else:
+		
+			post_id = request.form['event']
+			post = Post.query.get(int(post_id))
+			post.events.append(event)
+			event.posts.append(post)
+			db.session.commit()
+			
+			return redirect('/calendar_view')
+
+	else:
+		linked_posts = event.posts
+		all_posts = Post.query.all()
+		unlinked_posts = []
+		
+		for post in all_posts:
+			if not post in unlinked_posts:
+				unlinked_posts.append(post)
+				
+		return render_template('event.html', event=event, form=post_form, linked_posts=linked_posts, unlinked_posts=unlinked_posts, user=current_user)
+
+@app.route('/update_event/<int:id>', methods = ['GET', 'POST'])
+@require_login
+def update_event(id):
+	event = Event.query.get(int(id))
+    
+	if event.user_id != current_user.id:
+		return redirect('/events/<int:id>')
+   
+	if request.method == 'POST':	
+		
+		new_name = request.form['name']
+		new_date = request.form['date']
+		event.name = new_name	
+		event.date_happening = new_date
+		
+		db.session.commit()
+	
+		return redirect('/events/<ind:id>')
+	
+	else:
+		return render_template('update_event.html', event=event)	    
+        
+@app.route('/delete_event/<int:id>')
+@require_login
+def delete_event(id):
+	event = Event.query.get(int(id))
+	
+	if event.user_id != current_user.id:
+		return redirect('/event/<int:id>')		
+
+	try:
+		posts = event.posts
+    	
+		for post in posts:
+			post.events.remove(event)
+    		
+		db.session.delete(event)	
+		db.session.commit()
+        
+		return redirect('/calendar_view')
+    
+	except:
+		return "There was a problem deleting this event!"         
