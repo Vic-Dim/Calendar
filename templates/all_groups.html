@@ -10,7 +10,14 @@
         <a href=#newModal data-toggle="modal", class="btn btn-primary" title="Create Group">
             <i class="glyphicon glyphicon-pushpin"></i> Create a new group </a>
     </div>
+    <div>
+    <form method="POST" url ="{{url_for('all_groups')}}" enctype="multipart/form-data" align="right">
+		<input type="text" name="keyword" placeholder = "Enter keyword(s)">
+		<button type="submit" class="btn btn-primary" value="Search">
+	</form>
+	</div>	
 </div>
+
 {% endif %}
 
 <div class="row pad">

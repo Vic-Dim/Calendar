@@ -12,6 +12,9 @@
                     </div>
                     <br/>
                     <br/>
+                    {%if post.file_name %}
+                    	<br><embed src="/static/uploads/{{ post.file_name }}" width = "950" height = "300" style = "float: center"></br>
+                    {% endif %}
                     <div class="col-lg-12">
                         <br/>  <i class="glyphicon glyphicon-calendar"></i> 
                         {{ post.date_created.strftime('%d.%m.%Y, %H:%M:%S') }}
@@ -60,16 +63,30 @@
 	</div>
 {% endfor %}
 
-{% if current_user.active %}
-<div class="row pad">
-    <div class="col-lg-12 pad">
-        <div class="panel panel-primary">
-            <div class="panel-body pad" id="_post">
-            	<form method="POST" role="form" id="theForm">
-                    {{ form.csrf_token }}
-                    <div class="form-group"> {{ form.content(class="form-control", rows="5") }} </div>
-                    <button type="submit" class="btn btn-primary"> <i class="glyphicon glyphicon-plus"></i> Add your new comment </button>
-                </form>
+
+<div class="row">
+    		<div class="col-lg-3">
+        		<a href=#AddComment data-toggle="modal", class="btn btn-primary" title="Create Comment">
+            	<i class="glyphicon glyphicon-pushpin"></i> Add Post</a>
+    		</div>
+		</div>
+<div class="modal fade" id="AddComment">
+    		<div class="modal-dialog">
+        		<div class="modal-content">
+           			 <div class="modal-header">
+                		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                		<h4 class="modal-title">Create Comment</h4>
+            		</div>
+           		<div class="modal-body">
+                    	 <form method="POST" role="form" id="theForm" enctype="multipart/form-data">
+                    	 <!--{{ form.csrf_token }}
+                    	 <div class="form-group"> {{ form.content(class="form-control", rows="5") }} </div>
+                    	 <button type="submit" class="btn btn-primary"> <i class="glyphicon glyphicon-plus"></i> Add your new post </button>-->
+    					 <br><textarea name="comment_content" style="width:550px;height:50px;" placeholder = "Content"></textarea><br>
+						 <br><input class="form-control center" style="text-align: center;margin: 0 auto;" name ="comment_file" type = "file" placeholder = "File"><br>
+                    	 <button type="submit" name="comment" class="btn btn-primary"> <i class="glyphicon glyphicon-plus"></i> Add your new comment </button>						                               		
+                		 </form>
+                </form
             </div>
         </div>
     </div>
@@ -94,5 +111,5 @@
         </div>
     </div>
 </div>  
-{% endif %}
+
 {% endblock %}

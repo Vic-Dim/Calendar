@@ -16,7 +16,13 @@ from wtforms.validators import InputRequired
 from flask_wtf import FlaskForm 
 from datetime import datetime
 
+from fuzzywuzzy import fuzz, process
+
+import os
+
 app = Flask(__name__)
+
+UPLOAD_FOLDER = "static/uploads"
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -28,7 +34,7 @@ app.config['SECURITY_USER_IDENTITY_ATTRIBUTES'] = 'username'
 app.config['SECURITY_SEND_REGISTER_EMAIL'] = False
 app.config['SECURITY_REGISTER_USER_TEMPLATE'] = 'security/register_user.html'
 app.config['SECURITY_LOGIN_USER_TEMPLATE'] = 'security/login_user.html'
-
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # For more useful resources: https://flask-security-too.readthedocs.io/_/downloads/en/stable/pdf/
 
 
@@ -67,6 +73,7 @@ class User(db.Model, UserMixin):
     status = db.Column(db.String(30), unique=False, nullable=False)
     active = db.Column(db.Boolean())
     confirmed_at = db.Column(db.DateTime(), default = datetime.now())
+    profile_photo = db.Column(db.String(300), unique = True, nullable = True)
     
     roles = db.relationship('Role', secondary=roles_users, backref=db.backref('users', lazy='dynamic'))
     groups = db.relationship('Group', secondary=groups_users, backref=db.backref('users', lazy='dynamic'))
@@ -115,6 +122,7 @@ class Post(db.Model):
     content = db.Column(db.String(300), unique = False, nullable = False)
     date_created = db.Column(db.DateTime())
     comments = db.relationship('Comment', backref='post', lazy='dynamic')
+    file_name = db.Column(db.String(300), unique = False, nullable = True)
     
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
     event_id = db.Column(db.Integer(), db.ForeignKey('event.id'), nullable=True)
@@ -126,6 +134,7 @@ class Comment(db.Model):
     id = db.Column(db.Integer(), primary_key = True)
     content = db.Column(db.String, unique = False, nullable = False)
     date_created = db.Column(db.DateTime())
+    file_name = db.Column(db.String(300), unique = False, nullable = True)    
     
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
     post_id = db.Column(db.Integer(), db.ForeignKey('post.id'))
@@ -139,6 +148,7 @@ class Event(db.Model):
     date_event = db.Column(db.DateTime(), default = datetime.now())
    	
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
+    group_id = db.Column(db.Integer(), db.ForeignKey('user.id'), nullable=True)
     posts = db.relationship('Post', secondary=events_to_posts, backref = db.backref('events', lazy = 'dynamic'))
 
 class Apply(db.Model):
@@ -150,9 +160,21 @@ class Apply(db.Model):
     
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
     admin_id = db.Column(db.Integer(), db.ForeignKey('admin.id'))
-    group_id = db.Column(db.Integer(), db.ForeignKey('group.id'))
-   
+    group_id = db.Column(db.Integer(), db.ForeignKey('group.id'))   
 
+
+class PostPicture(db.Model):
+    __tablename__ = 'post_photo'
+
+    id = db.Column(db.Integer(), primary_key = True)
+    post_id = db.Column(db.Integer(), db.ForeignKey('post.id'), unique = True)
+    
+
+class CommentPicture(db.Model):
+    __tablename__ = 'comment_photo'
+
+    id = db.Column(db.Integer(), primary_key = True)
+    comment_id = db.Column(db.Integer(), db.ForeignKey('comment.id'), unique = True)
 
 class New_Group(FlaskForm):
     name = StringField('Title')
@@ -220,87 +242,138 @@ def invitations():
 @require_login
 def all_groups():
 
-    form = New_Group()
+	form = New_Group()
 
-    if request.method == 'POST' and form.validate_on_submit():
-        new_group = Group(name=form.name.data, description=form.description.data, date_created=datetime.now())
-        new_admin = Admin(current_user.id, current_user.email, current_user.password, current_user.name, current_user.username,
+	if request.method == 'POST': 
+		if form.validate_on_submit():
+			new_group = Group(name=form.name.data, description=form.description.data, date_created=datetime.now())
+			new_admin = Admin(current_user.id, current_user.email, current_user.password, current_user.name, current_user.username,
                             current_user.age, current_user.gender, current_user.status, current_user.confirmed_at)
-        new_group.admin_id = new_admin.id
-        db.session.add(new_group)
-        db.session.commit()
+			new_group.admin_id = new_admin.id
+			db.session.add(new_group)
+			db.session.commit()
         
-        admin = Admin.query.get(int(new_admin.id))
+			admin = Admin.query.get(int(new_admin.id))
 
-        if admin != None:
-            admin.groups.append(new_group)
-        else:
-            db.session.add(new_admin)
-            db.session.commit()
-            new_admin.groups.append(new_group)
+			if admin != None:
+				admin.groups.append(new_group)
+			else:
+				db.session.add(new_admin)
+				db.session.commit()
+				new_admin.groups.append(new_group)
+	
+		else:
+			keyword = request.form['keyword']
+			groups = Group.query.filter(Group.name.ilike('%'+keyword+'%'))
+				
+			return render_template('all_groups.html', form=form, groups=groups, current_user=current_user)
 
-    groups = Group.query.all()
-    return render_template('all_groups.html', form=form, groups=groups, current_user=current_user)
+	groups = Group.query.all()
+	return render_template('all_groups.html', form=form, groups=groups, current_user=current_user)
+
+@app.route('/group/<group_id>/calendar', methods=['GET', 'POST'])
+@require_login
+def group_calendar(group_id):
+
+	form = New_Event()
+	if request.method == 'POST' and form.validate_on_submit():
+		
+		new_event = Event(name=form.name.data, date_happening=form.date.data, user_id=current_user.id, group_id=group_id)
+		db.session.add(new_event)
+		db.session.commit()
+
+		return redirect('/calendar_view')
+
+	else:
+		events = Event.query.filter_by(group_id=group_id)
+		return render_template('calendar_view.html', events=events, form=form)
 
 @app.route('/group/<group_id>', methods=['GET', 'POST'])
 @require_login
 def group(group_id):
-    form = New_Post()
-    group = Group.query.get(int(group_id))
+	form = New_Post()
+	group = Group.query.get(int(group_id))
 
-    if request.method == 'POST' and form.validate_on_submit():
-        try:
-            post = Post(user_id=current_user.id, content = form.content.data, date_created=datetime.now())
-            group.posts.append(post)
-            db.session.commit()
-        except:
-            return "There was a problem adding a new post on this topic!"
+	if request.method == 'POST':
+	
+		if "fuzzy" in request.form:
+			keyword = request.form['keyword']
+			posts = Post.query.filter(Post.content.ilike('%'+keyword+'%'))
+			users = group.users
+			return render_template('group.html', group=group, form=form, posts=posts, users=users, current_user=current_user)
+	
+		elif "post" in request.form:
+			try:
+        
+				file = request.files['post_file']
 
-    posts = Post.query.filter_by(group_id=group_id).all()
-    users = group.users
-    return render_template('group.html', group=group, form=form, posts=posts, users=users, current_user=current_user)
+				if file and file.filename != '':
+					file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
+					post = Post(user_id=current_user.id, content = request.form['post_content'], date_created=datetime.now(), group_id=group_id, file_name = file.filename)
+        		
+				else:
+					post = Post(user_id=current_user.id, content = request.form['post_content'], date_created=datetime.now(), group_id=group_id)
+        			
+				group.posts.append(post)
+				db.session.commit()
+			except:
+				return "There was a problem adding a new post on this topic!"
+
+	posts = Post.query.filter_by(group_id=group_id).all()
+	users = group.users
+	return render_template('group.html', group=group, form=form, posts=posts, users=users, current_user=current_user)
 
 @app.route('/post/<post_id>', methods=['GET', 'POST'])
 @require_login
 def post(post_id):
 
-    post = Post.query.get(int(post_id))
-    comment_form = New_Comment()
+	post = Post.query.get(int(post_id))
+	comment_form = New_Comment()
     
-    if not post.group_id in current_user.groups and not post.group_id:
-        return redirect('/all_groups')
+	if not post.group_id in current_user.groups and not post.group_id:
+		return redirect('/all_groups')
 
-    if request.method == 'POST':    
-        if comment_form.validate_on_submit():
-            try:
-                new_comment = Comment(content=form.data.content, date_created=datetime.now(), user_id=current_user.id, post_id=post.id)
-                post.comments.append(new_comment)
-                db.session.commit()
+	if request.method == 'POST':  
+      
+		if "comment" in request.form:
+			try:
+        	
+				file = request.files['post_file']
+
+				if file and file.filename != '':
+					file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
+					new_comment = Comment(content=request.form["comment_content"], date_created=datetime.now(), user_id=current_user.id, post_id=post.id, file_name = file.filename)
+        			
+				else:
+					new_comment = Comment(content=request.form["comment_content"], date_created=datetime.now(), user_id=current_user.id, post_id=post.id)
+        			
+				post.comments.append(new_comment)
+				db.session.commit()
          	
-            except:
-            	return "There was a problem adding a new comment on this post!"			
+			except:
+				return "There was a problem adding a new comment on this post!"			
 
 
-        else:
-            event_id = request.form['event']
-            event = Event.query.get(int(event_id))
-            post.events.append(event)
-            event.posts.append(post)
-            db.session.commit()
-            return redirect('post/<int:id>')
+		else:
+			event_id = request.form['event']
+			event = Event.query.get(int(event_id))
+			post.events.append(event)
+			event.posts.append(post)
+			db.session.commit()
+			return redirect('post/<int:id>')
 			
 
-    else:
-        comments = Comment.query.filter_by(post_id=post_id).all()
-        linked_to = post.events
-        all_events = Event.query.all()
-        unlinked = []
+	else:
+		comments = Comment.query.filter_by(post_id=post_id).all()
+		linked_to = post.events
+		all_events = Event.query.all()
+		unlinked = []
         
-        for event in all_events:
-        	if not event in linked_to:
-        		unlinked.append(event)
+		for event in all_events:
+			if not event in linked_to:
+				unlinked.append(event)
         
-        return render_template('post.html', post=post, comments=comments, form=comment_form, linked_to=linked_to, unlinked=unlinked, current_user=current_user)
+		return render_template('post.html', post=post, comments=comments, form=comment_form, linked_to=linked_to, unlinked=unlinked, current_user=current_user)
 
 
 @app.route('/apply_for_group/<group_id>', methods = ['GET', 'POST'])
@@ -553,4 +626,4 @@ def delete_event(id):
 		return redirect('/calendar_view')
     
 	except:
-		return "There was a problem deleting this event!"         
+		return "There was a problem deleting this event!"
