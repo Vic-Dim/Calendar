@@ -63,6 +63,7 @@
             	<i class="glyphicon glyphicon-pushpin"></i> Add Post</a>
     		</div>
 		</div>
+		<a href="{{url_for('create_poll', group_id=group.id)}}" class="btn btn-primary"><i class="glyphicon-pencil"></i> Create Poll</a>
 {% endif %}
 
 {% if current_user.active %}

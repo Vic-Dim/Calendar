@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Group{% endblock %}
+
+{% block body %}
+<div>
+	<form method="POST" role="form" id="theForm" enctype="multipart/form-data">
+		<br><textarea name="question" style="width:550px;height:50px;" placeholder = "Question"> {{question.content}}</textarea></br>
+		<br>
+		{% for option in options %}
+			<br><textarea name="{{option.id}}" style="width:150px;height:25px;"> {{option.content}}</textarea>
+		{% endfor %}
+    	</br>
+    	<input type="hidden" id="postId" name="poll_id" value={{poll.id}}>
+    	<br><button type="submit" name="poll" class="btn btn-primary"> <i class="glyphicon glyphicon-plus"></i> Submit poll </button></br>	
+	</form>
+</div>	
+<div class="row">
+    	<div class="col-lg-3">
+        	<a href=#AddOption data-toggle="modal", class="btn btn-primary" title="Add Option">
+            <i class="glyphicon glyphicon-pushpin"></i> Add another option</a>
+    	</div>
+</div>		
+
+<div class="modal fade" id="AddOption">
+    <div class="modal-dialog">
+        <div class="modal-content">
+           	<div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Add option</h4>
+            </div>
+           	<div class="modal-body">
+                <form method="POST" role="form" id="theForm" enctype="multipart/form-data">                    
+    				<br><textarea name="new_option" style="width:550px;height:50px;" placeholder = "Option"></textarea><br>
+    				<input type="hidden" id="postId" name="poll_id" value={{poll.id}}>
+                    <button type="submit" name="add_option" class="btn btn-primary"> <i class="glyphicon glyphicon-plus"></i> Add your new option </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>   
+{% endblock %}

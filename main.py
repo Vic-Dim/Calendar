@@ -132,7 +132,7 @@ class Comment(db.Model):
     __tablename__ = 'comment'
     
     id = db.Column(db.Integer(), primary_key = True)
-    content = db.Column(db.String, unique = False, nullable = False)
+    content = db.Column(db.String(300), unique = False, nullable = False)
     date_created = db.Column(db.DateTime())
     file_name = db.Column(db.String(300), unique = False, nullable = True)    
     
@@ -150,6 +150,32 @@ class Event(db.Model):
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
     group_id = db.Column(db.Integer(), db.ForeignKey('user.id'), nullable=True)
     posts = db.relationship('Post', secondary=events_to_posts, backref = db.backref('events', lazy = 'dynamic'))
+
+class Poll(db.Model):
+	__tablename__ = 'poll'
+
+	id = db.Column(db.Integer(), primary_key = True)    
+	date_created = db.Column(db.DateTime(), default=datetime.now())
+    
+	user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
+	group_id = db.Column(db.Integer(), db.ForeignKey('group.id'), nullable=True)    	
+
+class Question(db.Model):
+	__tablename__ = 'question'
+
+	id = db.Column(db.Integer(), primary_key = True)    
+	content = db.Column(db.String(300), unique = False, nullable = False, default="Question")	
+    
+	poll_id = db.Column(db.Integer(), db.ForeignKey('poll.id'), nullable=False)
+
+class Option(db.Model):
+	__tablename__ = 'option'
+	
+	id = db.Column(db.Integer(), primary_key = True)    
+	content = db.Column(db.String(300), unique = False, nullable = False, default="Option")	
+	count = db.Column(db.Integer(), nullable=False, default = 0)
+    
+	question_id = db.Column(db.Integer(), db.ForeignKey('question.id'), nullable=False)
 
 class Apply(db.Model):
     __tablename__ = 'apply'
@@ -627,3 +653,60 @@ def delete_event(id):
     
 	except:
 		return "There was a problem deleting this event!"
+
+@app.route('/group/<int:group_id>/create_poll', methods = ['GET', 'POST'])
+@require_login		
+def create_poll(group_id):
+	
+	if request.method == "POST":
+	
+		if "add_option" in request.form: #adding another option to the question
+			poll = Poll.query.filter_by(id=request.form['poll_id']).first()
+			question = Question.query.filter_by(poll_id=poll.id).first()
+			
+			
+			option = Option(question_id=question.id, content=request.form['new_option'])
+			
+			db.session.add(option)
+			db.session.commit()
+			
+			return render_template('create_poll.html', poll=poll, question=question, options=Option.query.filter_by(question_id=question.id))	
+			
+		else:#submiting all final changes to the base
+			poll = Poll.query.filter_by(id=request.form['poll_id']).first()
+			
+			question = Question.query.filter_by(poll_id=poll.id).first()	
+				
+			if request.form['question'] is not question.content:
+				question.content = request.form['question']
+				
+			options=Option.query.filter_by(question_id=question.id)
+			
+			for option in options:
+				option.content = request.form[str(option.id)]
+						 	
+			db.session.commit()
+			
+			return redirect('/all_groups')
+	
+	else:
+	
+		#generating custom question with 2 possible options. more options could be added
+		poll = Poll(user_id=current_user.id, group_id=group_id)
+		db.session.add(poll)
+		db.session.commit()
+		
+		question = Question(poll_id=poll.id)
+		db.session.add(question)
+		db.session.commit()
+		
+		option1 = Option(question_id=question.id)
+		option2 = Option(question_id=question.id)
+		
+		db.session.add(option1)		
+		db.session.add(option2)		
+
+		db.session.commit()
+		
+		return render_template('create_poll.html', poll=poll, question=question, options=Option.query.filter_by(question_id=question.id))	
+			
