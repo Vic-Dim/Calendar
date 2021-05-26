@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block body %}
+{% for survey in unvoted %}
+	<div class="row pad">
+    	<div class="col-lg-12">
+        	<div class="panel panel-primary">
+            	<div class="panel-body">
+                	<div class="row">
+                	    <div class="col-lg-12">
+                        	<strong>{{survey.question.content}}</strong>
+                        	</br>
+                        	<form method="POST" role="form">
+                        		{% for option in survey.options %} 
+                        		<input type="radio" name="option_id" value="{{option.id}}">{{option.content}}<br>
+                        		{% endfor %}
+                        		<input type="hidden" id="postId" name="poll_id" value={{survey.poll.id}}>
+                        		<br><button type="submit" name="poll" class="btn btn-primary"> <i class="glyphicon glyphicon-plus"></i> Submit answer </button></br>	
+                        	</form>
+                        </div>	
+                    </div>    
+                </div>
+			</div>
+		</div>
+	</div>
+{% endfor %}
+
+{% for survey in voted %}
+	<div class="row pad">
+    	<div class="col-lg-12">
+        	<div class="panel panel-primary">
+            	<div class="panel-body">
+                	<div class="row">
+                	    <div class="col-lg-12">
+                        	<strong>{{survey.question.content}}</strong>          
+                        		{% for option in survey.options %} 
+									<p>{{option.content}}: {{option.count}} voted</p>
+                        		{% endfor %}
+                        </div>	
+                    </div>    
+                </div>
+			</div>
+		</div>
+	</div>
+{% endfor %}
+
+{% endblock %}

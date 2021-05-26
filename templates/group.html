@@ -4,21 +4,18 @@
 {% block body %}
 <div class="pageTitle"> {{ group.name }} </div>
 
+
 <div class="row pad">
     <div class="col-lg-12">
         <div class="panel panel-primary">
+        			<div class="panel panel-body">
+                    	<a href="{{ url_for('group_calendar', group_id=group.id) }}" class="btn btn-primary"> Group Calendar</a>
+                    	<a href="{{ url_for('polls', group_id=group.id) }}" class="btn btn-primary"> Polls</a>		
+					</div>		
             <div class="panel-body">
                 <div class="row">
                     <div class="col-lg-12">
                         <strong>Description of the group:</strong> {{ group.description }}
-                    </div>
-                    <div class="button">
-                    	<a href="{{ url_for('group_calendar', group_id=group.id) }}" class="btn btn-primary"> Group Calendar</a>	
-              	       	<form method="POST" url ="{{url_for('group', group_id=group.id)}}" enctype="multipart/form-data" align="right">
-							<input type="text" name="keyword" placeholder = "Enter keyword(s)">
-							<button type="submit" name="fuzzy" class="btn btn-primary" value="Search">
-						</form>	
-                    </div>
                     <br/>
                     <br/>
                     <div class="col-lg-12">
@@ -32,7 +29,15 @@
 </div>
 
 {% if current_user in users or current_user.id == group.admin_id%}
-	<h2>All posts in this group:</h2>
+	
+	<div>
+		<h2>All posts in this group:</h2>
+		<form method="POST" url ="{{url_for('group', group_id=group.id)}}" role="form">
+			<input type="text" name="keyword" placeholder = "Enter keyword(s)">
+			<button type="submit" name="fuzzy" class="btn btn-primary" value="Search">Search</br>
+		</form>
+	</div>
+
 	{% for post in posts %}
 	<div class="panel panel-primary post" id="r1" style="border-radius: 20px;">
     	<div class="panel-body">
@@ -77,9 +82,6 @@
            		<div class="modal-body">
                     {%if current_user in users or current_user.id == group.admin_id %}
                     	 <form method="POST" role="form" id="theForm" enctype="multipart/form-data">
-                    	 <!--{{ form.csrf_token }}
-                    	 <div class="form-group"> {{ form.content(class="form-control", rows="5") }} </div>
-                    	 <button type="submit" class="btn btn-primary"> <i class="glyphicon glyphicon-plus"></i> Add your new post </button>-->
     					 <br><textarea name="post_content" style="width:550px;height:50px;" placeholder = "Content"></textarea><br>
 						 <br><input class="form-control center" style="text-align: center;margin: 0 auto;" name ="post_file" type = "file" placeholder = "File"><br>
                     	 <button type="submit" name="post" class="btn btn-primary"> <i class="glyphicon glyphicon-plus"></i> Add your new post </button>						                               		

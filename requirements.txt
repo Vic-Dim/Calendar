@@ -32,5 +32,3 @@ blinker
 cryptography
 cffi
 click
-fuzzywuzzy
-python-Levenshtein

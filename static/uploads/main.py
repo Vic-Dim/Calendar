@@ -719,6 +719,8 @@ def create_poll(group_id):
 
 def polls(group_id):
 
+	group = Group.query.get(int(group_id))
+
 	if request.method == 'POST':
 	
 		poll = Poll.query.filter_by(id=request.form['poll_id']).first()
@@ -752,4 +754,4 @@ def polls(group_id):
 			else:
 				unvoted.append(package)
 		
-		return render_template('polls.html', voted=voted, unvoted=unvoted)			
+		return render_template('polls.html', voted=voted, unvoted=unvoted, group=group)			
