@@ -16,11 +16,8 @@
     
     	<div class="row">
     		<div class="col-lg-3">
-    			<a href='/', class="btn btn-primary">Back</a>
         		<a href=#AddEvent data-toggle="modal", class="btn btn-primary" title="Create Event">
-        		<i class="glyphicon glyphicon-pushpin"></i> Add Event</a>
-        		<a href=#FilterGroupEvents  data-toggle="modal", class="btn btn-primary" title="Filter Events">
-        		<i class="glyphicon glyphicon-pushpin"></i>Filter Group Events</a>
+            	<i class="glyphicon glyphicon-pushpin"></i> Add Event</a>
     		</div>
 		</div>
     
@@ -41,30 +38,6 @@
             calendar.render();
         </script>
     	
-    	<div class="modal fade" id="FilterGroupEvents">
-    		<div class="modal-dialog">
-        		<div class="modal-content">
-           			<div class="modal-header">
-                		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                		<h4 class="modal-title">Create Post</h4>
-            		</div>
-           			<div class="modal-body">
-                   		 <form method="POST" role="form" id="theForm" enctype="multipart/form-data">
-                   		 	{%for group in groups%}
-                   		 		  <input type="checkbox" name="options" value={{group.name}}> {{group.name}}</input>
-                   		 		  </br>
-                   		 	{%endfor%}
-                   		 	<input type="checkbox" name="personal" value="personal"> Peronal</input>
-                   		 	</br>
-                   		 	<input type="checkbox" name="invited to" value="invited to"> Invited To</input>
-							</br>
-                    	 <button type="submit" name="filter" class="btn btn-primary"> <i class="glyphicon glyphicon-plus"></i> Filter Group Events</button>					                               		
-      	          		</form>
-            		</div>
-        		</div>
-    		</div>
-		</div>
-    	
     	<div class="modal fade" id="AddEvent">
     		<div class="modal-dialog">
         		<div class="modal-content">
@@ -83,7 +56,7 @@
 							<label for="">Date</label>{{ form.date(class="form-group") }}				
 						</div>
 						<div class="form-group">
-							<label for="" id="access">Access</label>{{ form.access(class="form-group") }}				
+							<label for="">Access</label>{{ form.access(class="form-group") }}				
 						</div>
 						<div class="form-group">
 							<label for="">Max Guests</label>{{ form.max_guests(class="form-group") }}				

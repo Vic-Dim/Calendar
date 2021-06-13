@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Add to event{% endblock %}
+{% block body %}
+	<div>
+		<form method="POST" url ="{{url_for('invite_to_event', event_id=event.id)}}" role="form">
+			<input type="text" name="keyword" placeholder = "Enter keyword(s)">
+			<button type="submit" name="fuzzy" class="btn btn-primary" value="Search">Search</br>
+		</form>
+	</div>
+
+<div class="panel panel-primary post" id="r1" style="border-radius: 20px;">
+    <div class="panel-body">
+        <div class="row post">
+   	        <div class="col-lg-9">
+   	            {% for user in users %}
+   	            	<a href="{{ url_for('inspect_profile', user_id=user.id) }}" class="btn btn-primary"> <i class="glyphicon glyphicon-user"></i> {{user.name}}</a>
+   	            		<form method="POST" role="form" id="invite">
+							<input type="hidden" name="user_id" value={{user.id}}>		
+							<button type="submit" name="invite" class="btn btn-primary"> <i class="glyphicon glyphicon-plus"></i> Invite to event </button>
+						</form>
+   	            {% endfor %}
+	        </div>
+  	    </div>
+   	</div>
+</div>
+{% endblock %}

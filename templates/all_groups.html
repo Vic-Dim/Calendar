@@ -38,7 +38,6 @@
                 {% if current_user.active and current_user.id == group.admin_id %}
                     <a href="{{ url_for('update_group', group_id=group.id) }}" class="btn btn-primary"><i class="glyphicon glyphicon-pencil"></i> Update </a>
                     <a href="/delete_group/{{ group.id }}" class="btn btn-primary"><i class="glyphicon glyphicon-remove"></i> Delete </a>
-                    <a href="/join_requests" class="btn btn-primary"><i class="glyphicon glyphicon-envelope"></i> Join Requests </a>
                 {% endif %}
             </div>
             {% endfor %}

@@ -12,9 +12,9 @@
                     </div>
                     <br/>
                     <br/>
-                    {%if post.file_name %}
+                    {%if post.file_name != None %}
                     	<div class="col-lg-12">
-                    		<br><a href="/static/uploads/{{ post.file_name }}" download>{{ post.file_name }}</a>
+                    		<br><a href="/static/uploads/{{ post.file_name }}" download>{{ post.actual_filename }}</a></br>
                     	</div>
                     {% endif %}
                     <div class="col-lg-12">
@@ -43,13 +43,19 @@
 {% endif %}
 
 <h2>All comments for this post:</h2>
-	{% for comment in comments %}
+
+{% for comment in comments %}
 	<div class="panel panel-primary post" id="r1" style="border-radius: 20px;">
     	<div class="panel-body">
     	    <div class="row post">
     	        <div class="col-lg-9">
     	            <div class="post-content"> <a href="{{ url_for('post', post_id=post.id) }}" style="font-size: 18px" class="blue">{{ comment.content }} </div>
     	        </div>
+    	        </br>
+    	        </br>
+    	        {% if comment.file_name != None %}
+    	        	<a href="/static/uploads/{{ comment.file_name }}" download>{{ comment.actual_filename }}</a></br>
+    	        {% endif %}
     	        <a href="{{url_for('update_comment', comment_id=comment.id)}}" class="btn btn-primary"><i class="glyphicon glyphicon-pencil"></i> Update</a>
     	        <a href="/delete_comment/{{ comment.id }}" class="btn btn-primary"><i class="glyphicon glyphicon-remove"></i> Delete</a>
     	        <br/>
@@ -65,11 +71,10 @@
 	</div>
 {% endfor %}
 
-
 <div class="row">
     		<div class="col-lg-3">
         		<a href=#AddComment data-toggle="modal", class="btn btn-primary" title="Create Comment">
-            	<i class="glyphicon glyphicon-pushpin"></i> Add Post</a>
+            	<i class="glyphicon glyphicon-pushpin"></i> Add Comment</a>
     		</div>
 		</div>
 <div class="modal fade" id="AddComment">

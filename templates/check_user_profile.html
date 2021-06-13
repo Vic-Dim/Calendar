@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Apply{% endblock %}
+{% block body %}
+	<div class="panel panel-primary post" id="r1" style="border-radius: 20px;">
+    <div class="panel-body">
+        <div class="row post">
+   	        <div class="col-lg-9">
+   	            <h4> Email address: {{ user.email }}</h4>
+				<h4> Username: {{ user.username }}</h4>
+				<h4> Name: {{ user.name }} </h4>
+				<h4> Age: {{ user.age }} </h4>
+				<h4> Gender: {{ user.gender }} </h4>
+				<h4> Status: {{ user.status }} </h4>
+	        </div>
+  	    </div>
+   	</div>
+</div>
+{% endblock %}

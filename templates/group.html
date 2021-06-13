@@ -8,10 +8,17 @@
 <div class="row pad">
     <div class="col-lg-12">
         <div class="panel panel-primary">
-        			<div class="panel panel-body">
+        			{% if current_user in users or current_user.id == group.admin_id%}
+        				<div class="panel panel-body">
                     	<a href="{{ url_for('group_calendar', group_id=group.id) }}" class="btn btn-primary"> Group Calendar</a>
-                    	<a href="{{ url_for('polls', group_id=group.id) }}" class="btn btn-primary"> Polls</a>		
-					</div>		
+                    	<a href="{{ url_for('polls', group_id=group.id) }}" class="btn btn-primary"> Polls</a>
+                    	<a href="{{ url_for('members', group_id=group.id)}}" class="btn btn-primary"> Members </a>
+                    	{% if current_user in admins %}
+                    		<a href="{{ url_for('join_requests', group_id=group.id)}}" class="btn btn-primary"><i class="glyphicon glyphicon-envelope"></i> Join Requests </a>
+                    		<a href="{{ url_for('add_people', group_id=group.id)}}" class="btn btn-primary"> Add People </a>
+						{% endif %}
+						</div>		
+					{%endif%}
             <div class="panel-body">
                 <div class="row">
                     <div class="col-lg-12">
@@ -71,7 +78,9 @@
 		<a href="{{url_for('create_poll', group_id=group.id)}}" class="btn btn-primary"><i class="glyphicon-pencil"></i> Create Poll</a>
 {% endif %}
 
-{% if current_user.active %}
+{% if current_user not in users and current_user.id != group.admin_id%}
+	<a href="{{ url_for('apply_for_group', group_id=group.id)}}" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i> Apply for group</a>
+{%endif%}
 <div class="modal fade" id="AddPost">
     		<div class="modal-dialog">
         		<div class="modal-content">
@@ -82,18 +91,22 @@
            		<div class="modal-body">
                     {%if current_user in users or current_user.id == group.admin_id %}
                     	 <form method="POST" role="form" id="theForm" enctype="multipart/form-data">
-    					 <br><textarea name="post_content" style="width:550px;height:50px;" placeholder = "Content"></textarea><br>
+    					 <br><textarea name="post_content" style="width:550px;height:50px;" placeholder = "Content"></textarea><br>	
 						 <br><input class="form-control center" style="text-align: center;margin: 0 auto;" name ="post_file" type = "file" placeholder = "File"><br>
+						 <label for="access">Access:</label>
+
+							<select name="access" id="access">
+  							<option value="private">Private(for group only)</option>
+  							<option value="public">Public</option>
+							</select>
+							</br>
                     	 <button type="submit" name="post" class="btn btn-primary"> <i class="glyphicon glyphicon-plus"></i> Add your new post </button>						                               		
                 		 </form>
-                   	{% else %}
-            		<a href="{{ url_for('apply_for_group', group_id=group.id)}}" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i> Apply for group</a>
-            		{% endif %}
-                </form>
+                	{%endif%}	 
             </div>
         </div>
     </div>
 </div>  
 	
-{% endif %}                   
+
 {% endblock %}
