@@ -606,12 +606,12 @@ def delete_post(id):
 		
 	for event in events:
 		event.posts.remove(post_to_delete)
-	try:	
-		db.session.delete(post_to_delete)
-		db.session.commit()
-		return redirect(request.referrer)
-	except:
-		return "There was a problem deleting this post!"     
+	#try:	
+	db.session.delete(post_to_delete)
+	db.session.commit()
+	return redirect(request.referrer)
+	#except:
+		#return "There was a problem deleting this post!"     
         
 @app.route('/delete_comment/<int:id>')
 @require_login
@@ -725,7 +725,6 @@ def event(id):
 		
 			post_id = request.form['event']
 			post = Post.query.get(int(post_id))
-			post.events.append(event)
 			event.posts.append(post)
 			db.session.commit()
 			
