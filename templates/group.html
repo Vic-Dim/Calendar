@@ -2,7 +2,7 @@
 {% block title %}Group{% endblock %}
 
 {% block body %}
-<div class="pageTitle"> {{ group.name }} </div>
+<div class="pageTitle"> <strong>Group Name:</strong> {{ group.name }} </div>
 
 
 <div class="row pad">
@@ -13,7 +13,7 @@
                     	<a href="{{ url_for('group_calendar', group_id=group.id) }}" class="btn btn-primary"> Group Calendar</a>
                     	<a href="{{ url_for('polls', group_id=group.id) }}" class="btn btn-primary"> Polls</a>
                     	<a href="{{ url_for('members', group_id=group.id)}}" class="btn btn-primary"> Members </a>
-                    	{% if current_user in admins %}
+                    	{% if current_user in admins or current_user.id == group.id%}
                     		<a href="{{ url_for('join_requests', group_id=group.id)}}" class="btn btn-primary"><i class="glyphicon glyphicon-envelope"></i> Join Requests </a>
                     		<a href="{{ url_for('add_people', group_id=group.id)}}" class="btn btn-primary"> Add People </a>
 						{% endif %}
@@ -38,11 +38,13 @@
 {% if current_user in users or current_user.id == group.admin_id%}
 	
 	<div>
-		<h2>All posts in this group:</h2>
-		<form method="POST" url ="{{url_for('group', group_id=group.id)}}" role="form">
-			<input type="text" name="keyword" placeholder = "Enter keyword(s)">
-			<button type="submit" name="fuzzy" class="btn btn-primary" value="Search">Search</br>
-		</form>
+		<div class="col-lg-12"></div>
+			<div class="pageTitle"> <h3> All posts in this group: </h3> </div>
+			<form method="POST" url ="{{url_for('group', group_id=group.id)}}" role="form">
+				<input type="text" name="keyword" placeholder = "Enter keyword(s)">
+				<button type="submit" name="fuzzy" class="btn btn-primary" value="Search">Search</br>
+			</form>
+		</div>
 	</div>
 
 	{% for post in posts %}
@@ -93,7 +95,7 @@
                     	 <form method="POST" role="form" id="theForm" enctype="multipart/form-data">
     					 <br><textarea name="post_content" style="width:550px;height:50px;" placeholder = "Content"></textarea><br>	
 						 <br><input class="form-control center" style="text-align: center;margin: 0 auto;" name ="post_file" type = "file" placeholder = "File"><br>
-						 <label for="access">Access:</label>
+						 <label for="access">Access: &nbsp; </label>
 
 							<select name="access" id="access">
   							<option value="private">Private(for group only)</option>

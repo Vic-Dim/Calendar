@@ -112,7 +112,7 @@ class Group(db.Model):
     
 	admin_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
 	posts = db.relationship('Post', backref='group', lazy='dynamic')
-   
+   	
 class Post(db.Model):
     __tablename__ = 'post'
     id = db.Column(db.Integer(), primary_key = True)
@@ -124,12 +124,11 @@ class Post(db.Model):
     access = db.Column(db.String(10), unique=False, nullable=False)
     
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
-    event_id = db.Column(db.Integer(), db.ForeignKey('event.id'), nullable=True)
+    #event_id = db.Column(db.Integer(), db.ForeignKey('event.id'), nullable=True)
     group_id = db.Column(db.Integer(), db.ForeignKey('group.id'), nullable=True)
 
 class Comment(db.Model):
 	__tablename__ = 'comment'
-    
 	id = db.Column(db.Integer(), primary_key = True)
 	content = db.Column(db.String(300), unique = False, nullable = False)
 	date_created = db.Column(db.DateTime())
@@ -147,7 +146,7 @@ class Event(db.Model):
 	date_happening = db.Column(db.DateTime(), default = datetime.now())
 	date_event = db.Column(db.DateTime(), default = datetime.now())
 	max_guests = db.Column(db.Integer(), default=0)
-	current_guests = db.Column(db.Integer(), default=0)
+	current_guests = db.Column(db.Integer(), default=1)
 	access = db.Column(db.String(10), unique=False, nullable=False)
    	
 	user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
@@ -278,6 +277,16 @@ def random_string(length):
 def index():
 	return render_template('index.html')
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+	if request.method == 'POST':
+		
+		file = request.files['register_file']
+
+		if file and file.filename != '':
+			new_filename = random_string(100)
+			file.save(os.path.join(app.config['UPLOAD_FOLDER'], new_filename))
+
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
@@ -338,11 +347,11 @@ def group_calendar(group_id):
 	form = New_Event()
 	if request.method == 'POST' and form.validate_on_submit():
 		
-		new_event = Event(name=form.name.data, date_happening=form.date.data, user_id=current_user.id, group_id=group_id)
+		new_event = Event(name=form.name.data, date_happening=form.date.data, user_id=current_user.id, group_id=group_id, access=form.access.data, max_guests=form.max_guests.data)
 		db.session.add(new_event)
 		db.session.commit()
 
-		return redirect('/calendar_view')
+		return redirect(request.referrer)
 
 	else:
 		events = Event.query.filter_by(group_id=group_id)
@@ -402,8 +411,9 @@ def group(group_id):
 		for admin in admins:
 			if user.id == admin.user_id:
 				admin_users.append(user)
+							
 				
-	return render_template('group.html', group=group, form=form, posts=posts, users=users, current_user=current_user, admins=admins)
+	return render_template('group.html', group=group, form=form, posts=posts, users=users, current_user=current_user, admins=admin_users)
 
 @app.route('/post/<post_id>', methods=['GET', 'POST'])
 @require_login
@@ -412,9 +422,6 @@ def post(post_id):
 	post = Post.query.get(int(post_id))
 	comment_form = New_Comment()
     
-	if not post.group_id in current_user.groups and not post.group_id:
-		return redirect('/all_groups')
-
 	if request.method == 'POST':  
       
 		if "comment" in request.form:
@@ -581,38 +588,36 @@ def update_comment(comment_id):
 @app.route('/delete_group/<int:id>')
 @require_login
 def delete_group(id):
-    group_to_delete = Group.query.get(int(id))
+	group_to_delete = Group.query.get(int(id))
 
-    try:
-        db.session.delete(group_to_delete)
-        db.session.commit()
-        return redirect(request.referrer)
-    except:
-        return "There was a problem deleting this group!"
+	try:
+		db.session.delete(group_to_delete)
+		db.session.commit()
+		return redirect(request.referrer)
+	except:
+		return "There was a problem deleting this group!"
         
-@app.route('/delete_post/<int:id>')
+@app.route('/delete_post/<int:id>', methods = ['GET'])
 @require_login
 def delete_post(id):
-    post_to_delete = Post.query.get(int(id))
+	post_to_delete = Post.query.get(int(id))
 
-    if post_to_delete.user_id != current_user.id:
-        return redirect('/all_groups')
-
-    try:
-        db.session.delete(post_to_delete)
-        db.session.commit()
-        return redirect(request.referrer)
-    except:
-        return "There was a problem deleting this post!"     
+	events = post_to_delete.events
+		
+	for event in events:
+		event.posts.remove(post_to_delete)
+	try:	
+		db.session.delete(post_to_delete)
+		db.session.commit()
+		return redirect(request.referrer)
+	except:
+		return "There was a problem deleting this post!"     
         
 @app.route('/delete_comment/<int:id>')
 @require_login
 def delete_comment(id):
     comment_to_delete = Comment.query.get(int(id))
 	
-    if comment_to_delete.user_id != current_user.id:
-        return redirect('/all_groups')		
-
     try:
         db.session.delete(comment_to_delete)
         db.session.commit()
@@ -632,6 +637,7 @@ def personal_calendar():
 			new_event = Event(name=form.name.data, date_happening=form.date.data, user_id=current_user.id, access=form.access.data, max_guests=form.max_guests.data)
 			db.session.add(new_event)
 			db.session.commit()
+			
 			return redirect('/personal_calendar')
 
 		elif "filter" in request.form:
@@ -642,16 +648,17 @@ def personal_calendar():
 				if value == 'personal':
 					personal = Event.query.filter_by(user_id=current_user.id).all()
 					
+					
 					for event in personal:
 						events_to_show.append(event)
 			
 				elif value == 'invited to':
 					for event in current_user.event:
-							events_to_show.append(event)
+						events_to_show.append(event)
 			
 				else:
 					group = Group.query.filter_by(name=value).first()
-					events = group.events
+					events = Event.query.filter_by(group_id=group.id).all()
 					
 					for event in events:
 						events_to_show.append(event)	
@@ -694,15 +701,18 @@ def event(id):
 				new_filename = random_string(100)
 				file.save(os.path.join(app.config['UPLOAD_FOLDER'], new_filename))
 				new_post = Post(user_id=current_user.id, content = request.form['post_content'], date_created=datetime.now(), file_name=new_filename, actual_filename = file.filename, access=request.form['access'])
+				db.session.add(new_post)
+				event.posts.append(new_post)
+				db.session.commit()			
+				return redirect(request.referrer)
         		
 			else:
 				new_post = Post(user_id=current_user.id, content = request.form['post_content'], date_created=datetime.now(), access=request.form['access'])
-			
-			db.session.add(new_post)
-			event.posts.append(new_post)
-			new_post.events.append(event)
-			db.session.commit()
-			return redirect(request.referrer)
+				db.session.add(new_post)
+				event.posts.append(new_post)
+				db.session.commit()			
+				return redirect(request.referrer)	
+		
 		
 		elif "assign" in request.form:
 			event.guests.append(current_user)
@@ -1145,7 +1155,7 @@ def invitations():
 			event = Event.query.filter_by(id=invite.event_id).first()
 			pack["invite"] = invite
 			pack["sender"] = sender
-			pack["event"] = group
+			pack["event"] = event
 			event_packs.append(pack)
 			
 		return render_template('invitations.html', current_user=current_user, invites=invite_packs, event_invites=event_packs)

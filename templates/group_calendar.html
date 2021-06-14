@@ -49,17 +49,19 @@
                 	<form method="POST" role="form">
                   	 	{{ form.csrf_token }}
                     	<div class="form-group">
-							<label for="">Enter title</label>{{ form.name(class="form-group") }}
+							<label for="">Enter title</label>
+							&nbsp; &nbsp; &nbsp; {{ form.name(class="form-group") }}
 						</div>
 					
 						<div class="form-group">
-							<label for="">Date</label>{{ form.date(class="form-group") }}				
+							<label for="">Date</label> &nbsp; &nbsp; &nbsp;
+							&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;{{ form.date(class="form-group") }}				
 						</div>
 						<div class="form-group">
-							<label for="">Access</label>{{ form.access(class="form-group") }}				
+							<label for="">Access</label> &nbsp; &nbsp; &nbsp; {{ form.access(class="form-group") }}				
 						</div>
 						<div class="form-group">
-							<label for="">Max Guests</label>{{ form.max_guests(class="form-group") }}				
+							<label for="">Max Guests</label> &nbsp; &nbsp; &nbsp; {{ form.max_guests(class="form-group") }}				
 						</div>
 						
 						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>

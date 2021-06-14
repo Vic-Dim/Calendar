@@ -1,5 +1,5 @@
 body {
-    background-color: yellowgreen;
+    background-color: #5680E9;
     font-family: serif, sans-serif, verdana, georgia;
 }
 
@@ -14,7 +14,7 @@ body {
     div.container {
         width: 1018px;
         border-radius: 20px;
-        background-color: white !important;
+        background-color: #84CEEB !important;
     }
     div.container_login {
         width: auto;
@@ -32,14 +32,14 @@ body {
 }
 
 div.container {
-    background-color: yellow;
+    background-color: #5AB8EA;
     margin-top: 30px;
     padding-top: 20px;
     margin-bottom: 30px;
 }
 
 div.menu {
-    background-color: red;
+    background-color: #8860D0;
     text-align: center;
     margin-bottom: 15px;
     padding: 20px;
@@ -48,9 +48,9 @@ div.menu {
 
 .modal-header {
     color: white;
-    background-color: orange;
-    border-color: yellow;
-    box-shadow: 2px 2px 2px lightcoral;
+    background-color: #8860D0;
+    border-color: #5AB8EA;
+    box-shadow: 2px 2px 2px #C1C8E4;
 }
 
 .m-item:first-of-type {

@@ -1,0 +1,499 @@
+// NAME: Victor Dimitrov
+// CLASS: Xib
+// NUMBER: 5
+// PROBLEM: #1
+// FILE NAME: main.c
+// FILE PURPOSE: сорс код за реализирането на задачата ls
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <dirent.h>
+#include <string.h>
+#include <pwd.h>
+#include <grp.h>
+#include <time.h>
+
+//Забележка: Вместо да използвам strcat, strcpy и излишно инициализиране на нови
+//символни низове съм използвал snprintf(), който прави същото нещо - залепя n на
+//брой елемента в определен pattern и запазва новополученият стринг в символен низ.
+
+//флагове за незадължитилните параметри, броя на флаговете и броя на всички аргументи към програмата
+int is_r = 0, is_a = 0, is_l = 0, flags = 0, total_args = 0;
+
+//check_forbidden_hidden() - проверявам дали името на някой файл е '.' или "..", където
+//char *name е името на файла, не път към него
+
+int check_forbidden_hidden(char *name){
+
+	int is_forbidden = 0;
+
+	if(strlen(name) == 1 && name[0] == '.'){
+		is_forbidden = 1;
+	}
+
+	if(strlen(name) == 2 && name[0] == '.' && name[1] == '.'){
+		is_forbidden = 1;
+	}
+
+	return is_forbidden;
+}
+
+//check_hidden() - проверявам дали някой файл е скрит, където
+//char *name е името на файла, не път към него
+
+int check_hidden(char *name){
+
+	int is_forbidden = 0;
+
+	if(name[0] == '.'){
+		is_forbidden = 1;
+	
+	}	
+	
+	return is_forbidden;
+}
+
+//get_type() - подавам път към файл, взимам му информацията и проверявам неговият
+//тип с маска и макроси, като ако е неизвестен тип се връща *. char *path е самият
+//път към файла
+
+char get_type(char *path){
+
+	struct stat *statbuf = (struct stat*) malloc(sizeof(struct stat));
+	stat(path, statbuf);
+
+	int masked = statbuf->st_mode & S_IFMT;
+	char res = '*';
+
+	if(S_ISREG(masked)){
+		res = '-';
+		
+	}else if(S_ISDIR(masked)){
+		res = 'd';
+		
+	}else if(S_ISCHR(masked)){
+		res = 'c';
+	
+	}else if(S_ISBLK(masked)){
+		res = 'b';
+	
+	}else if(S_ISFIFO(masked)){
+		res = 'p';
+	
+	}else if(S_ISLNK(masked)){
+		res = 'l';
+		
+	}else if(S_ISSOCK(masked)){
+		res  = 's';
+	
+	}
+
+	free(statbuf);
+	return res;
+}
+
+//total_bytes() - трябваше ф-ята да е total_blocks(), но ме домързя да я поправям навсякъде.
+//Идеята е една и съща - взимам поток от файлове на дадена директория + път към оригиналната
+//директория, за всеки един елемент от потока взимам броя блокове, които файлът използва, и
+//ги прибавям в обща променлива. Накрая деля броя блокове на 2, защото блоковете са с размер 
+//512B, а ls -l ги изкарва като 1MB-тови блокове. DIR* dirp е указателят към потокът на
+//директорията, а char *path - пътят на директорията. 
+
+int total_bytes(DIR *dirp, char *path){
+
+	struct dirent *dirinfo = NULL;
+	struct stat *statbuf = (struct stat*) malloc(sizeof(struct stat));
+	int total = 0;
+	
+	do{
+		
+		dirinfo = readdir(dirp);
+			
+		if(dirinfo == NULL){
+			break;
+		}
+		
+		if(!is_a){
+			if(check_hidden(dirinfo->d_name)){
+				continue;
+							
+			}
+					
+		}else{
+			if(check_forbidden_hidden(dirinfo->d_name)){
+				continue;
+			}
+		}
+
+		char filepath[1024];
+		snprintf(filepath, 1024, "%s/%s", path, dirinfo->d_name);
+		stat(filepath, statbuf);		
+		total += statbuf->st_blocks;
+				
+	}while(dirinfo != NULL);
+
+	rewinddir(dirp);
+	
+	free(statbuf);
+	return total / 2;
+}
+
+//check_for_permissions() - взимаме вече извлечената цялостна информация за даден
+//файл, създаваме нов символен низ, първоначално запълнен с тирета и на този симво-
+//лен низ записваме правомощията на различните видове потребители върху файла, като
+//комбинираме типа на файла с маски. Накрая връщаме символния низ.
+
+char *check_for_permissions(struct stat *statbuf){
+
+	char *res = malloc(10);
+	memset(res, '-', 9);
+	res[9] = '\0';
+
+	mode_t mode = statbuf->st_mode;
+
+	if(mode & S_IRUSR){ res[0] = 'r'; } 
+	if(mode & S_IWUSR){ res[1] = 'w'; }
+	if(mode & S_IXUSR){ res[2] = 'x'; }
+	if(mode & S_IRGRP){ res[3] = 'r'; }
+	if(mode & S_IWGRP){ res[4] = 'w'; }
+	if(mode & S_IXGRP){ res[5] = 'x'; }
+	if(mode & S_IROTH){ res[6] = 'r'; }
+	if(mode & S_IWOTH){ res[7] = 'w'; }
+	if(mode & S_IXOTH){ res[8] = 'x'; }
+
+	return res;
+}
+
+//display_file() - ф-я, която всъщност ще изпринти нещо, само ако флагът -l е вдигнат.
+//Взимаме път към файл (char *arg), извличаме информацията за него, като после извеждаме
+//на екрана правомощията на хотребителите върху файла, броя твърди връзки, името на собственика
+//и на групата както и кога последно е бил модифициран файла. passwd и group са структури, които
+//съдържат информация съответно за имената, паролата, идентификаторът и др. за съответно собстве-
+//ника на файла и съответната група, а ключове към идентификаторите за собственика и групата има
+//в информацията за файла.
+
+void display_file(char *arg){
+
+	struct stat *statbuf = (struct stat*) malloc(sizeof(struct stat));
+	stat(arg, statbuf);
+	
+	if(is_l){
+		char *s = check_for_permissions(statbuf);
+		printf("%s ", s);
+		
+		nlink_t hard_links = statbuf->st_nlink;
+		printf("%ld ", hard_links);
+		
+		struct passwd *pws;
+    	pws = getpwuid(statbuf->st_uid);
+        printf("%s ", pws->pw_name);
+        
+        struct group *grp;
+		grp = getgrgid(statbuf->st_gid);
+        printf("%s ", grp->gr_name);
+	
+		printf("%ld ", statbuf->st_size);
+		
+		char buffer [80];
+		struct tm * timeinfo;
+
+		time_t curr_time = statbuf->st_mtim.tv_sec;
+		time(&curr_time);
+		
+ 	    timeinfo = localtime (&curr_time);
+		strftime(buffer, 80, "%b %d %R", timeinfo);	
+		
+		printf("%s", buffer);
+		
+		free(s);
+	}
+	
+	free(statbuf);
+}
+
+//recursion() - ф-ята за рекурсия, която се изпълнява само когато флагът R е вдигнат.
+//Нищо особено, извеждаме името на директорията, след това (подробна при -l) информация за 
+//файловете в директорията. След това връщаме показалецът към потока в началото на потока
+//и започваме да обхождаме наново файловете, като този път взимаме само тези, които са
+//директории и ги добавяме в рекурсията (ако -A е вдигнат, взимаме и скритите директории).
+//Понеже пътят на подфайловете е относителен спрямо началната директория, но пътят до начал-
+//ната директория невинаги е относителен, на рекурсията подавам име, което да бъде изпринтено(*print_path)
+//и такова, спрямо което да се търси и извежда информацията за файловете в директорията(*path). 
+//Името на поддиректорията се конкатенира със всяко от двете имена при следващо извикване на
+//рекурсията.
+
+void recursion(char *print_path, char *path){
+
+	printf("%s:\n", print_path);
+	
+	DIR *dirp = opendir(path);
+	struct dirent *dirinfo = NULL;
+
+	if(is_l){
+		printf("total %d\n", total_bytes(dirp, path));
+	}
+	
+	do{
+		
+		dirinfo = readdir(dirp);
+			
+		if(dirinfo == NULL){
+			break;
+		}
+		
+		char curr_path[1024];
+		snprintf(curr_path, 1024, "%s/%s", path, dirinfo->d_name);
+		char c = get_type(curr_path);
+			
+		if(!is_a){
+			if(check_hidden(dirinfo->d_name)){
+				continue;			
+			}
+			
+		}else{
+			if(check_forbidden_hidden(dirinfo->d_name)){
+				continue;
+			}	
+		}
+		
+		printf("%c", get_type(curr_path));
+		display_file(curr_path);
+		printf(" %s\n", dirinfo->d_name);		
+				
+	}while(dirinfo != NULL);
+
+
+	rewinddir(dirp);				
+
+	do{
+		dirinfo = readdir(dirp);
+			
+		if(dirinfo == NULL){
+			break;
+		}
+		
+		
+		char curr_path[1024], curr_print_path[1024];
+		snprintf(curr_path, 1024, "%s/%s", path, dirinfo->d_name);
+		char type = get_type(curr_path);
+		
+		if(type == 'd'){
+			if(!is_a){
+				if(check_hidden(dirinfo->d_name)){
+					continue;			
+				}
+			
+			}else{
+				if(check_forbidden_hidden(dirinfo->d_name)){
+					continue;
+				}	
+			}
+			printf("\n");			
+			snprintf(curr_print_path, 1024, "%s/%s", print_path, dirinfo->d_name);
+			recursion(curr_print_path, curr_path);	
+		}
+				
+	}while(dirinfo != NULL);
+
+	closedir(dirp);	
+}
+
+//check_for_flags() - ф-я, която да вдига съответните незадължителни флагове. Ф-яата се
+//извиква многократно, той като флаговете може да са разделени. char *arg е съответният
+//конзолен аргумент, почващ с '-', когото проверяваме за нужните нам флагове.
+
+void check_for_flags(char *arg){
+
+	for(int i = 1; i < strlen(arg); i++){
+	
+		if(arg[i] == 'R'){
+			is_r = 1;
+		
+		}else if(arg[i] == 'A' || arg[i] == 'a'){
+			is_a = 1;
+			
+		}else if(arg[i] == 'l'){
+			is_l = 1;
+		}
+	}
+}
+
+//display_directory() - ф-я, която изкарва съдържанието на дадена директория, когато флагът -R
+//не е вдигнат. Щом сме влезли във ф-ята, то със сигурност имаме поне един аргумент, който не са 
+//флагове, но тъй като не знаем дали това е единственият такъв, изваждаме от общия брой аргументи
+//total_args броя на флаговете flags + 1 (нулевият конзолен аргумент ни е името на самата програма).
+//Това се прави за да разберем дали е нужно да извеждаме името на директорията или не. След това отва-
+//ряме потокът от файлове на дадената директория и последователно извеждаме желаната спрямо флаговете
+//информация (подробна информация при -l и данни за скритите файлове при -A). Накрая затваряме потокът
+//и излизаме от ф-ята. char *path е път към директорията, подаден като конзолен аргумент.
+
+void display_directory(char *path){
+
+	struct stat *statbuf = (struct stat*) malloc(sizeof(struct stat));
+	struct stat *statbuf1 = (struct stat*) malloc(sizeof(struct stat));
+	stat(path, statbuf);
+	stat(".", statbuf1);
+	
+	if(total_args - (flags + 1) > 1){
+		printf("%s:\n", path);
+	}		
+	
+		
+	DIR *dirp = opendir(path);
+	struct dirent *dirinfo = NULL;
+		
+	if(is_l){
+		printf("total %d\n", total_bytes(dirp, path));
+	}
+
+	do{
+		
+		dirinfo = readdir(dirp);
+			
+		if(dirinfo == NULL){
+			break;
+		}
+			
+		char curr_path[1024];
+		snprintf(curr_path, 1024, "%s/%s", path, dirinfo->d_name);
+		char c = get_type(curr_path);
+		
+		if(!is_a){
+			if(check_hidden(dirinfo->d_name)){
+				continue;			
+			}
+			
+		}else{
+			if(check_forbidden_hidden(dirinfo->d_name)){
+				continue;
+			}	
+		}
+						
+		printf("%c", get_type(curr_path));
+		display_file(curr_path);
+		printf(" %s\n", dirinfo->d_name);		
+				
+	}while(dirinfo != NULL);
+	
+	closedir(dirp);	
+}
+
+//main() - входна точка на програмата. При липса на конзолни аргументи взимаме директорията
+//в която се намираме в момента, и изкарваме информация за съдържанието и. При наличие на 
+//повече файлове като аргументи започва обхождане по argv, като извежданата информация е 
+//съобразена с наличието или липсата на съответни флагове. Самите флагове се вдигат още в
+//началото, защото те се прилагат върху всеки друг аргумент на програмата. При неправилно
+//име или несъществуващ файлов тип се изкарва съответната грешка и програмата приключва. 
+
+int main(int argc, char *argv[]){
+
+	total_args = argc;
+
+	for(int i = 1; i < argc; i++){
+		
+		if(argv[i][0] == '-'){
+			check_for_flags(argv[i]);
+			flags++;
+		}
+		
+	}
+
+	if(argc - (flags + 1) == 0){
+		
+		char path[1024];
+    	getcwd(path, 1024);
+	
+		struct stat *statbuf = (struct stat*) malloc(sizeof(struct stat));
+		
+		int stat_res = stat(path, statbuf);
+		
+		if(stat_res < 0){
+			free(statbuf);
+			return 0;
+		}
+		
+		if(!is_r){
+			display_directory(path);
+		
+		}else{
+			recursion(".", path);
+		}
+		
+		free(statbuf);
+	
+	}else{		
+		for(int i = 1; i < argc; i++){
+		
+			if(argv[i][0] != '-'){
+								
+				char type = get_type(argv[i]);
+				
+				if(type == '*'){
+					char message[1024];
+					snprintf(message, 1024, "ls: cannot access %s", argv[i]); 
+					perror(message);
+					break;
+				}
+				
+				if(type == 'd'){
+				
+					struct stat *statbuf = (struct stat*) malloc(sizeof(struct stat));
+					stat(argv[i], statbuf);
+				
+					int masked = statbuf->st_mode & S_IROTH;
+				
+					if(!masked){
+						char message[1024];
+						snprintf(message, 1024, "ls: cannot open directory %s", argv[i]); 
+						perror(message);
+						free(statbuf);
+						break;
+					}
+				
+					if(is_r){
+					
+						recursion(".\0", argv[i]);
+					
+					
+					}else{
+						display_directory(argv[i]);
+				
+					}	
+				
+					if(i < argc - 1){
+						printf("\n");
+					}
+					
+				}else{
+				
+					if(!is_a){
+						if(check_hidden(argv[i])){
+							continue;
+							
+						}
+					
+					}else{
+						if(check_forbidden_hidden(argv[i])){
+							continue;
+						}
+				
+					}
+					
+					printf("%c", get_type(argv[i]));
+					display_file(argv[i]);	
+					printf(" %s\n", argv[i]);
+					
+					if(i < argc - 1 && get_type(argv[i + 1]) == 'd'){
+						printf("\n");
+					}
+				}						
+			}
+			
+		}
+	}
+
+	return 0;
+}
