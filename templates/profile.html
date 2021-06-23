@@ -3,13 +3,13 @@
 
 {% block body %}
 
-<h1> Your profile data </h1>
+<h1> Profile data </h1>
 
-<h4> Your Email Address is: &emsp; {{ current_user.email }} </h4>
-<h4> Your Username is: &emsp;&emsp;&nbsp;&nbsp;&nbsp; {{ current_user.username }}</h4>
-<h4> Your Name is: &emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp; {{ current_user.name }} </h4>
-<h4> Your Age is: &emsp;&emsp;&emsp;&emsp;&emsp;&nbsp; {{ current_user.age }} </h4>
-<h4> Your Sex is: &emsp;&emsp;&emsp;&emsp;&emsp;&nbsp; {{ current_user.gender }} </h4>
-<h4> Your Status is: &emsp;&emsp;&emsp;&emsp;&nbsp; {{ current_user.status }} </h4>
+<h4> Email Address is: &emsp; <strong> {{ current_user.email }} </h4>
+<h4> Username is: &emsp;&emsp;&nbsp;&nbsp;&nbsp; <strong> {{ current_user.username }} </strong></h4>
+<h4> Name is: &emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp; <strong> {{ current_user.name }} </strong></h4>
+<h4> Age is: &emsp;&emsp;&emsp;&emsp;&emsp;&nbsp; <strong> {{ current_user.age }} </strong></h4>
+<h4> Sex is: &emsp;&emsp;&emsp;&emsp;&emsp;&nbsp; <strong> {{ current_user.gender }} </strong></h4>
+<h4> Status is: &emsp;&emsp;&emsp;&emsp;&nbsp; <strong> {{ current_user.status }} </strong></h4>
 
 {% endblock %}

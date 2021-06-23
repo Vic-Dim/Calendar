@@ -81,7 +81,7 @@ class User(db.Model, UserMixin):
 	__tablename__ = 'user'
 	id = db.Column(db.Integer(), primary_key=True)
 	email = db.Column(db.String(300), unique=True, nullable=False)
-	password = db.Column(db.String(300), unique=False, nullable=False)
+	password = db.Column(db.String(300), unique=True, nullable=False)
 	name = db.Column(db.String(300), unique=False, nullable=False)
 	username = db.Column(db.String(300), unique=True, nullable=False)
 	age = db.Column(db.Integer(), unique=False, nullable=False)
@@ -124,7 +124,7 @@ class Post(db.Model):
     access = db.Column(db.String(10), unique=False, nullable=False)
     
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
-    #event_id = db.Column(db.Integer(), db.ForeignKey('event.id'), nullable=True)
+    event_id = db.Column(db.Integer(), db.ForeignKey('event.id'), nullable=True)
     group_id = db.Column(db.Integer(), db.ForeignKey('group.id'), nullable=True)
 
 class Comment(db.Model):
@@ -570,7 +570,7 @@ def update_post(post_id):
 def update_comment(comment_id):
 	comment = Comment.query.get(int(comment_id))
 		
-	if comment_to_delete.user_id != current_user.id:
+	if comment.user_id != current_user.id:
 		return redirect('/all_groups')	
 		
 	if request.method == 'POST':	

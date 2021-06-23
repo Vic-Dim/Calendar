@@ -11,15 +11,15 @@
     		<div class="panel-body">
     	    	<div class="row post">
    	    	    <div class="col-lg-9">
-   		    	        	<p><a href="{{ url_for('inspect_profile', user_id=invitation.sender.id) }}" class="btn btn-primary"> <i class="glyphicon glyphicon-user"></i> {{invitation.sender.name}}</a>
-   		    	        	invites you to group <a href="{{url_for('group', group_id=invitation.group.id)}}" class="btn btn-primary"> <i class="glyphicon glyphicon-th"></i>{{invitation.group.name}}</a></br> 
+   		    	        	<p><a href="{{ url_for('inspect_profile', user_id=invitation.sender.id) }}"> <i class="glyphicon glyphicon-user"></i> {{invitation.sender.name}}</a>
+   		    	        	invites you to group   <a href="{{url_for('group', group_id=invitation.group.id)}}"></i>{{invitation.group.name}}</a></br> 
    		    	        	<form method="POST" role="form" id="accept">
 								<input type="hidden" id="userId" name="invite_id" value={{invitation.invite.id}}>		
-								<button type="submit" name="accept" class="btn btn-primary"> <i class="glyphicon glyphicon-ok-sign"></i> Accept </button>
+								<button type="submit" name="accept" class="btn btn-success"> <i class="glyphicon glyphicon-ok-sign"></i> Accept </button>
 							</form>
-							<form method="POST" role="form" id="decline">
+							<form method="POST" role="form" id="decline" style="padding-top: 5px">
 								<input type="hidden" id="userId" name="decline_id" value={{invitation.invite.id}}>		
-								<button type="submit" name="decline" class="btn btn-primary"> <i class="glyphicon glyphicon-remove"></i> Decline </button>
+								<button type="submit" name="decline" class="btn btn-danger"> <i class="glyphicon glyphicon-remove"></i> Decline </button>
 							</form>
 		    	    </div>
   		    	</div>
@@ -37,15 +37,15 @@
     		<div class="panel-body">
     	    	<div class="row post">
    	    	    <div class="col-lg-9">
-   		    	        	<p><a href="{{ url_for('inspect_profile', user_id=invitation.sender.id) }}" class="btn btn-primary"> <i class="glyphicon glyphicon-user"></i> {{invitation.sender.name}}</a>
+   		    	        	<p><a href="{{ url_for('inspect_profile', user_id=invitation.sender.id) }}"> <i class="glyphicon glyphicon-user"></i> {{invitation.sender.name}}</a>
    		    	        	invites you to participate in {{invitation.event.name}}</a></p></br> 
    		    	        	<form method="POST" role="form" id="confirm">
 								<input type="hidden" id="userId" name="confirm_id" value={{invitation.invite.id}}>		
-								<button type="submit" name="confirm" class="btn btn-primary"> <i class="glyphicon glyphicon-ok-sign"></i> Confirm participation </button>
+								<button type="submit" name="confirm" class="btn btn-success"> <i class="glyphicon glyphicon-ok-sign"></i> Confirm participation </button>
 							</form>
-							<form method="POST" role="form" id="decline">
+							<form method="POST" role="form" id="decline" style="padding-top: 5px">
 								<input type="hidden" id="userId" name="discard_id" value={{invitation.invite.id}}>		
-								<button type="submit" name="discard" class="btn btn-primary"> <i class="glyphicon glyphicon-remove"></i> Discard </button>
+								<button type="submit" name="discard" class="btn btn-danger"> <i class="glyphicon glyphicon-remove"></i> Discard </button>
 							</form>
 		    	    </div>
   		    	</div>

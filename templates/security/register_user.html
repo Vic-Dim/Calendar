@@ -6,22 +6,22 @@
 
 {% block body %}
 {% include "security/_messages.html" %}
-<div class="pageTitle">{{ _('Register') }}</div>
+<!--<div class="pageTitle">{{ _('Register') }}</div>-->
     <form method="POST" action="{{ url_for_security('register') }}" name="register_user_form" role="form">
         <div class="row pad">
-            <div class="col-lg-6">
+            <div class="col-lg-6 col-lg-offset-3">
                 {{ register_user_form.hidden_tag() }}
-                <div class="form-group"> {{ render_field_with_errors(register_user_form.email, class="form-control") }} </div>
-                <div class="form-group"> {{ render_field_with_errors(register_user_form.username, class="form-control") }} </div>
-                <div class="form-group"> {{ render_field_with_errors(register_user_form.name, class="form-control") }} </div>
-                <div class="form-group"> {{ render_field_with_errors(register_user_form.age, class="form-control") }} </div>
-                <div class="form-group"> {{ render_field_with_errors(register_user_form.gender, class="form-control") }} </div>
-                <div class="form-group"> {{ render_field_with_errors(register_user_form.status, class="form-control") }} </div>
-                <div class="form-group"> {{ render_field_with_errors(register_user_form.password, class="form-control") }} </div>
+                <div class="form-group" align="center"> {{ render_field_with_errors(register_user_form.email, class="form-control") }} </div>
+                <div class="form-group" align="center"> {{ render_field_with_errors(register_user_form.username, class="form-control") }} </div>
+                <div class="form-group" align="center"> {{ render_field_with_errors(register_user_form.name, class="form-control") }} </div>
+                <div class="form-group" align="center"> {{ render_field_with_errors(register_user_form.age, class="form-control") }} </div>
+                <div class="form-group" align="center"> {{ render_field_with_errors(register_user_form.gender, class="form-control") }} </div>
+                <div class="form-group" align="center"> {{ render_field_with_errors(register_user_form.status, class="form-control") }} </div>
+                <div class="form-group" align="center"> {{ render_field_with_errors(register_user_form.password, class="form-control") }} </div>
             </div>
 
-            <div class="col-lg-6">
-                <div class="form-group">
+            <div class="col-lg-6 col-lg-offset-3">
+                <div class="form-group" align="center">
                     {% if register_user_form.password_confirm %}   
                     {{ render_field_with_errors(register_user_form.password_confirm, class="form-control") }}
                     {% endif %}
@@ -49,17 +49,17 @@
                 <!-- <label for>Upload Profile Image:</label>
 				<br><input class="form-control center" style="text-align: center;margin: 0 auto;" name ="post_file" type = "file" placeholder = "File"><br> -->
 
-                <input type="file"  accept="image/*" name="image" id="file"  onchange="loadFile(event)" style="display: none;">
+                <!-- <input type="file"  accept="image/*" name="image" id="file"  onchange="loadFile(event)" style="display: none;">
                 <label for="file" style="cursor: pointer;">Upload Image</label>
                 <img id="output" width="200" />
-                <input type="submit">
+                <input type="submit"> 
 
                 <script>
                     var loadFile = function(event) {
                         var image = document.getElementById('output');
                         image.src = URL.createObjectURL(event.target.files[0]);
                     };
-                </script> 
+                </script> -->
 
                 <!-- <div >
                     <input type="file" name="file" id="file">
@@ -110,8 +110,8 @@
         </div>
 
         <div class="row pad">
-            <div class="col-lg-6">
-                <div class="form-group"> {{ render_field(register_user_form.submit, class="btn btn-primary") }} </div>
+            <div class="col-lg-15">
+                <div class="form-group" align="center"> {{ render_field(register_user_form.submit, class="btn btn-outline-info") }} </div>
             </div>
         </div>
     </form>

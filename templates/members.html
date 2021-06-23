@@ -3,19 +3,11 @@
 
 {% block body %}
 
-	<div>
-		<form method="POST" url ="{{url_for('group', group_id=group.id)}}" role="form">
-			<input type="text" name="keyword" placeholder = "Enter keyword(s)">
-			<button type="submit" name="fuzzy" class="btn btn-primary" value="Search">Search</br>
-		</form>
-	</div>
-
-	{% if admins %}
-		<strong> Admins: </strong></br>
 		</br>
-	{% else %}
-		<strong> No admins were found</strong></br>
-	{% endif %}	
+		<strong> Admins: </strong></br>
+<div style="padding-bottom: 5px">  
+  <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#demo" style="padding-bottom: 5px;">Collapse admins</button>
+  <div id="demo" class="collapse">	
 	{%for admin in admins %}
 		<div class="row pad">
     		<div class="col-lg-12">
@@ -23,7 +15,7 @@
             		<div class="panel-body">
             	    	<div class="row">
             	    	    <div class="col-lg-12">
-								<a href="{{ url_for('inspect_profile', user_id=admin.id) }}" class="btn btn-primary"> <i class="glyphicon glyphicon-sunglasses"></i> {{admin.name}}</a></br>
+								<a href="{{ url_for('inspect_profile', user_id=admin.id) }}"> <i class="glyphicon glyphicon-sunglasses"></i> {{admin.name}}</a></br>
 							</div>
 						</div>
 					</div>
@@ -31,38 +23,54 @@
 			</div>
 		</div>						
 	{%endfor%} 
+	</div>
+</div>	
+
 	{%if members %}	
 		</br>
 		<strong>All Members: </strong></br>
-	{% else %}
-		<strong> No members were found</strong></br>
-	{% endif %}		
-	{%for member in members %}
-			<div class="row pad">
-    			<div class="col-lg-12">
-        			<div class="panel panel-primary">
-            			<div class="panel-body">
-                			<div class="row">
-                	    		<div class="col-lg-12">
-									<a href="{{ url_for('inspect_profile', user_id=member.id) }}" class="btn btn-primary"> <i class="glyphicon glyphicon-user"></i> {{member.name}}</a></br>
-									{% if member not in admins%}
-										<form method="POST" role="form" id="kick">
-											<input type="hidden" id="memberId" name="member_id" value={{member.id}}>		
-											<button type="submit" name="kick" class="btn btn-primary"> <i class="glyphicon glyphicon-remove"></i> Kick Member </button>
-										</form>
-										<form method="POST" role="form" id="promote">
-											<input type="hidden" id="memberId" name="member_id" value={{member.id}}>
-											<button type="submit" name="promote" class="btn btn-primary"> <i class="glyphicon glyphicon-ok-sign"></i> Make Admin </button>
-										</form>
-									{% endif %}
+		
+		<div style="padding-bottom: 5px">  
+  			<button type="button" class="btn btn-info" data-toggle="collapse" data-target="#demo1" style="padding-bottom: 5px">Collapse members</button>
+  				<div id="demo1" class="collapse">
+					{%for member in members %}
+						<div class="row pad">
+    						<div class="col-lg-12">
+        						<div class="panel panel-primary">
+            						<div class="panel-body">
+                						<div class="row">
+                	    					<div class="col-lg-12">
+												<a href="{{ url_for('inspect_profile', user_id=member.id) }}"> <i class="glyphicon glyphicon-user"></i> {{member.name}}</a></br>
+													{% if member not in admins%}
+														
+														<form method="POST" role="form" id="promote" style="padding-top: 5px">
+															<input type="hidden" id="memberId" name="member_id" value={{member.id}}>
+															<button type="submit" name="promote" class="btn btn-success"> <i class="glyphicon glyphicon-ok-sign"></i> Make Admin </button>
+														</form>
+														<form method="POST" role="form" id="kick" style="padding-top: 5px">
+															<input type="hidden" id="memberId" name="member_id" value={{member.id}}>		
+															<button type="submit" name="kick" class="btn btn-danger"> <i class="glyphicon glyphicon-remove"></i> Kick Member </button>
+														</form>
+													{% endif %}
+												</div>
+											</div>
+										</div>
+									</div>
 								</div>
-							</div>
-						</div>
+							</div>						
+						{% endfor %}
+		
 					</div>
 				</div>
-			</div>						
-	{% endfor %}	
+	{% else %}
+		<strong> No members were found</strong></br>
+	{% endif %}			
 
 		
-
+	<div style="padding-bottom:20px; padding-top:30px">
+		<form method="POST" url ="{{url_for('group', group_id=group.id)}}" role="form">
+			<input type="text" name="keyword" placeholder = "Enter keyword(s)">
+			<button type="submit" name="fuzzy" class="btn btn-success" value="Search"> <i class="glyphicon glyphicon-search"></i>Search</br>
+		</form>
+	</div>
 {% endblock %}

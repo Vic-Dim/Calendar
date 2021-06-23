@@ -6,17 +6,16 @@
 
 {% block body %}
 {% include "security/_messages.html" %}
-<div class="pageTitle">{{ _('Login') }}</div>
 
 <div class="row pad">
-    <div class="col-lg-10 col-lg-offset-1">
+    <div class="col-lg-6 col-lg-offset-3">
         <form method="POST" action="{{ url_for_security('login') }}" name="login_user_form" role="form">
             {{ login_user_form.hidden_tag() }}
-            <div class="form-group"> {{ render_field_with_errors(login_user_form.email, class="form-control") }} </div>
-            <div class="form-group"> {{ render_field_with_errors(login_user_form.password, class="form-control") }} </div>       
+            <div class="form-group" align="center"> {{ render_field_with_errors(login_user_form.email, class="form-control") }} </div>
+            <div class="form-group" align="center"> {{ render_field_with_errors(login_user_form.password, class="form-control") }} </div>       
             {{ render_field_with_errors(login_user_form.remember) }}
             {{ render_field(login_user_form.next) }}
-            <div class="form-group"> {{ render_field(login_user_form.submit, class="btn btn-primary") }} </div>
+            <div class="form-group" align="center"> {{ render_field(login_user_form.submit, class="btn btn-outline-info") }} </div>
         </form>
     </div>
 </div>

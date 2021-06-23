@@ -4,7 +4,6 @@
     	<link rel="stylesheet" href="{{ url_for('static', filename='bootstrap-3.3.6/dist/css/bootstrap.min.css') }}"/>
 		<script src="{{ url_for('static', filename='bootstrap-3.3.6/js/tests/vendor/jquery.min.js') }}"></script>
         <script src="{{ url_for('static', filename='bootstrap-3.3.6/dist/js/bootstrap.min.js') }}"></script>
-        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='./css/styles.css') }}"/>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE-edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,17 +13,17 @@
     </head>
     <body>			
     
-    	<div class="row">
+    	<div class="row" style="padding-left: 20px; padding-top: 15px">
     		<div class="col-lg-3">
-    			<a href='/', class="btn btn-primary">Back</a>
-        		<a href=#AddEvent data-toggle="modal", class="btn btn-primary" title="Create Event">
+    			<a href='/', class="btn btn-success">Back</a>
+        		<a href=#AddEvent data-toggle="modal", class="btn btn-success" title="Create Event">
         		<i class="glyphicon glyphicon-pushpin"></i> Add Event</a>
-        		<a href=#FilterGroupEvents  data-toggle="modal", class="btn btn-primary" title="Filter Events">
+        		<a href=#FilterGroupEvents  data-toggle="modal", class="btn btn-success" title="Filter Events">
         		<i class="glyphicon glyphicon-pushpin"></i>Filter Group Events</a>
     		</div>
 		</div>
     
-        <div id="calendar"></div>
+        <div id="calendar" style="padding-left: 20px; padding-right: 20px; padding-bottom: 30px"></div>
         <script> 
             let calendarEl = document.getElementById('calendar');
             let calendar = new FullCalendar.Calendar(calendarEl, {
@@ -46,7 +45,7 @@
         		<div class="modal-content">
            			<div class="modal-header">
                 		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                		<h4 class="modal-title">Create Post</h4>
+                		<h4 class="modal-title" align="center">Filter Events</h4>
             		</div>
            			<div class="modal-body">
                    		 <form method="POST" role="form" id="theForm" enctype="multipart/form-data">
@@ -58,7 +57,9 @@
                    		 	</br>
                    		 	<input type="checkbox" name="options" value="invited to"> Invited To</input>
 							</br>
-                    	 <button type="submit" name="filter" class="btn btn-primary"> <i class="glyphicon glyphicon-plus"></i> Filter Group Events</button>					                               		
+						<div style="padding-top: 10px">		
+                    	 <button type="submit" name="filter" class="btn btn-info"> <i class="glyphicon glyphicon-plus"></i> Filter Group Events</button>					                               		
+      	          		</div>
       	          		</form>
             		</div>
         		</div>
@@ -70,29 +71,40 @@
         		<div class="modal-content">
            			 <div class="modal-header">
                 		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                		<h4 class="modal-title">Create Event</h4>
+                		<h4 class="modal-title" align="center">Create Event</h4>
             		</div>
            		<div class="modal-body">
                 	<form method="POST" role="form">
                   	 	{{ form.csrf_token }}
                     	<div class="form-group">
+                    		<div class="col-lg-offset-3">
 							<label for="">Enter title</label> 
 							&nbsp; &nbsp; &nbsp; {{ form.name(class="form-group") }}
+						</div>	
 						</div>
 					
 						<div class="form-group">
+						    <div class="col-lg-offset-3">
 							<label for="">Date</label> &nbsp; &nbsp; &nbsp;
 							&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;{{ form.date(class="form-group") }}				
-						</div>
-						<div class="form-group">
-							<label for="" id="access">Access</label> &nbsp; &nbsp; &nbsp; {{ form.access(class="form-group") }}				
-						</div>
-						<div class="form-group">
-							<label for="">Max Guests</label> &nbsp; &nbsp; &nbsp; {{ form.max_guests(class="form-group") }}				
+							</div>
 						</div>
 						
+						<div class="form-group">
+							<div class="col-lg-offset-3">
+							<label for="" id="access">Access</label> &nbsp; &nbsp; &nbsp; {{ form.access(class="form-group") }}				
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-lg-offset-3">
+							<label for="">Max Guests</label> &nbsp; &nbsp; &nbsp; {{ form.max_guests(class="form-group") }}				
+							</div>
+						</div>
+						
+						<div class="col-lg-offset-4">
 						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
 						<button type="submit" class="btn btn-primary">Save Changes</button>
+                		</div>
                 	</form>
             	</div>
         	</div>

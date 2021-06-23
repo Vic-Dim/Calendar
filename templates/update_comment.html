@@ -6,10 +6,12 @@
         <div class="panel panel-primary">
             <div class="panel-body pad" id="_post">
             	<form method = "POST"  url = "update_comment/{{comment.id}}" enctype="multipart/form-data">	
-                  	<h4> Current comment content: {{ comment.content }}</h4>
+                  	<h4 align="center"> Current content: {{ comment.content }}</h4>
                   	<textarea name="new_content" style="width:950px;height:150px;" placeholder = "New comment content"></textarea></br>
                   	</br>
-                  	<button type="submit" class="btn btn-primary"> <i class="glyphicon glyphicon-cogwheel"></i> Save changes </button>
+                  	<div class="col-lg-offset-5">
+                  	<button type="submit" class="btn btn-success"> <i class="glyphicon glyphicon-cog"></i> Save changes </button>
+            		</div>
             	</form>	
             </div>
         </div>

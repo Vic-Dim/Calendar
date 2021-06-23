@@ -2,29 +2,24 @@
 {% block title %} Groups {% endblock %}
 
 {% block body %}
-<div class="pageTitle"> All Created Groups </div>
 
 {% if current_user.active %}
 <div class="row">
-    <div class="col-lg-3">
-        <a href=#newModal data-toggle="modal", class="btn btn-primary" title="Create Group">
-            <i class="glyphicon glyphicon-pushpin"></i> Create a new group </a>
-    </div>
-    <div>
-    <form method="POST" url ="{{url_for('all_groups')}}" enctype="multipart/form-data" align="right">
+    <div class="col-lg-10">
+    <form method="POST" url ="{{url_for('all_groups')}}" enctype="multipart/form-data">
 		<input type="text" name="keyword" placeholder = "Enter keyword(s)">
-		<button type="submit" class="btn btn-primary" value="Search">Search</br>
+		<button type="submit" class="btn btn-success" value="Search"> <span class="glyphicon glyphicon-search"></span> Search</br>
 	</form>
 	</div>	
 </div>
-
+	</br>
 {% endif %}
 
-<div class="row pad">
-    <div class="col-lg-12">
-        <div class="panel panel-primary">
-            <div class="panel-heading">
-                <div class="row">
+<div class="row pad" >
+    <div class="col-lg-12" >
+        <div class="panel panel-success" >
+            <div class="panel-heading" >
+                <div class="row" >
                     <div class="col-lg-4"><i class="glyphicon glyphicon-star"></i> Name of the Group </div>
                     <div class="col-lg-4"><i class="glyphicon glyphicon-info-sign"></i> Description of the Group </div>
                 </div>
@@ -36,8 +31,8 @@
                     <div class="col-lg-4"> <p> <em> {{ group.description }} </em> </p> </div>
                 </div>
                 {% if current_user.active and current_user.id == group.admin_id %}
-                    <a href="{{ url_for('update_group', group_id=group.id) }}" class="btn btn-primary"><i class="glyphicon glyphicon-pencil"></i> Update </a>
-                    <a href="/delete_group/{{ group.id }}" class="btn btn-primary"><i class="glyphicon glyphicon-remove"></i> Delete </a>
+                    <a href="{{ url_for('update_group', group_id=group.id) }}" class="btn btn-success"><i class="glyphicon glyphicon-pencil"></i> Update </a>
+                    <a href="/delete_group/{{ group.id }}" class="btn btn-danger"><i class="glyphicon glyphicon-remove"></i> Delete </a>
                 {% endif %}
             </div>
             {% endfor %}
@@ -50,18 +45,25 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title">Create Group</h4>
+                <h4 class="modal-title" align="center">Create Group</h4>
             </div>
             <div class="modal-body">
                 <form method="POST" role="form">
                     {{ form.csrf_token }}
-                    <div class="form-group"> <label for="name">Group Name</label> {{ form.name(class="form-control") }} </div>
-                    <div class="form-group"> <label for="description">Group Description</label> {{ form.description(class="form-control") }} </div>
-                    <button type="submit" class="btn btn-primary">Add your Group</button>
+                    <div class="form-group" align="center"> <label for="name" >Group Name</label> {{ form.name(class="form-control") }} </div>
+                    <div class="form-group" align="center"> <label for="description">Group Description</label> {{ form.description(class="form-control") }} </div>
+                    	<button type="submit" class="btn btn-info" align="-center">Add your Group</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+</br>
+</br>
+<div class="col-lg-0" style= "padding-bottom: 20px">
+        <a href=#newModal data-toggle="modal", class="btn btn-success" title="Create Group">
+            <i class="glyphicon glyphicon-pushpin"></i> Create a new group </a>
+            
+    </div>
    
 {% endblock %}

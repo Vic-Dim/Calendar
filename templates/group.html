@@ -2,26 +2,23 @@
 {% block title %}Group{% endblock %}
 
 {% block body %}
-<div class="pageTitle"> <strong>Group Name:</strong> {{ group.name }} </div>
-
-
 <div class="row pad">
     <div class="col-lg-12">
         <div class="panel panel-primary">
         			{% if current_user in users or current_user.id == group.admin_id%}
         				<div class="panel panel-body">
-                    	<a href="{{ url_for('group_calendar', group_id=group.id) }}" class="btn btn-primary"> Group Calendar</a>
-                    	<a href="{{ url_for('polls', group_id=group.id) }}" class="btn btn-primary"> Polls</a>
-                    	<a href="{{ url_for('members', group_id=group.id)}}" class="btn btn-primary"> Members </a>
+                    	<a href="{{ url_for('group_calendar', group_id=group.id) }}" class="btn btn-success"> <i class="glyphicon glyphicon-calendar"></i>Group Calendar</a>
+                    	<a href="{{ url_for('polls', group_id=group.id) }}" class="btn btn-success"><i class="glyphicon glyphicon-list-alt"></i> Polls</a>
+                    	<a href="{{ url_for('members', group_id=group.id)}}" class="btn btn-success"><i class="glyphicon glyphicon-user"></i> Members </a>
                     	{% if current_user in admins or current_user.id == group.id%}
-                    		<a href="{{ url_for('join_requests', group_id=group.id)}}" class="btn btn-primary"><i class="glyphicon glyphicon-envelope"></i> Join Requests </a>
-                    		<a href="{{ url_for('add_people', group_id=group.id)}}" class="btn btn-primary"> Add People </a>
+                    		<a href="{{ url_for('join_requests', group_id=group.id)}}" class="btn btn-success"><i class="glyphicon glyphicon-envelope"></i> Join Requests </a>
+                    		<a href="{{ url_for('add_people', group_id=group.id)}}" class="btn btn-success"> <i class="glyphicon glyphicon-plus"></i>Add People </a>
 						{% endif %}
 						</div>		
 					{%endif%}
             <div class="panel-body">
                 <div class="row">
-                    <div class="col-lg-12">
+                    <div class="col-lg-6">
                         <strong>Description of the group:</strong> {{ group.description }}
                     <br/>
                     <br/>
@@ -39,14 +36,14 @@
 	
 	<div>
 		<div class="col-lg-12"></div>
-			<div class="pageTitle"> <h3> All posts in this group: </h3> </div>
-			<form method="POST" url ="{{url_for('group', group_id=group.id)}}" role="form">
+			<div class="pageTitle" style= "padding-left: 15px"> <h3> Posts: </h3> </div>
+			<form method="POST" url ="{{url_for('group', group_id=group.id)}}" role="form" style= "padding-left: 15px">
 				<input type="text" name="keyword" placeholder = "Enter keyword(s)">
-				<button type="submit" name="fuzzy" class="btn btn-primary" value="Search">Search</br>
+				<button type="submit" name="fuzzy" class="btn btn-success	" value="Search"><span class="glyphicon glyphicon-search"></span>Search</br>
 			</form>
 		</div>
 	</div>
-
+	</br>
 	{% for post in posts %}
 	<div class="panel panel-primary post" id="r1" style="border-radius: 20px;">
     	<div class="panel-body">
@@ -55,8 +52,8 @@
     	            <div class="post-content"> <a href="{{ url_for('post', post_id=post.id) }}" style="font-size: 18px" class="blue">{{ post.content }} </div>
     	        </div>
     	        {% if current_user.id == group.admin_id or current_user in admins or post.user_id == current_user.id %}
-    	        <a href="{{url_for('update_post', post_id=post.id)}}" class="btn btn-primary"><i class="glyphicon glyphicon-pencil"></i> Update</a>
-    	        <a href="/delete_post/{{ post.id }}" class="btn btn-primary"><i class="glyphicon glyphicon-remove"></i> Delete</a>
+    	        <a href="{{url_for('update_post', post_id=post.id)}}" class="btn btn-success"><i class="glyphicon glyphicon-pencil"></i> Update</a>
+    	        <a href="/delete_post/{{ post.id }}" class="btn btn-danger"><i class="glyphicon glyphicon-remove"></i> Delete</a>
     	        {% endif %}
     	        <br/>
     	        <br/>
@@ -72,37 +69,44 @@
 	{% endfor %}
 	
 	<div class="row">
-    		<div class="col-lg-3">
-        		<a href=#AddPost data-toggle="modal", class="btn btn-primary" title="Create Post">
+    		<div class="col-lg-3" style="padding-bottom: 5px">
+        		<a href=#AddPost data-toggle="modal", class="btn btn-info" title="Create Post">
             	<i class="glyphicon glyphicon-pushpin"></i> Add Post</a>
     		</div>
 		</div>
-		<a href="{{url_for('create_poll', group_id=group.id)}}" class="btn btn-primary"><i class="glyphicon-pencil"></i> Create Poll</a>
+		<div style= "padding-bottom: 20px">
+		<a href="{{url_for('create_poll', group_id=group.id)}}" class="btn btn-info"><i class="glyphicon-pencil"></i> Create Poll</a>
+		</div>
 {% endif %}
 
 {% if current_user not in users and current_user.id != group.admin_id%}
-	<a href="{{ url_for('apply_for_group', group_id=group.id)}}" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i> Apply for group</a>
+	<div style="padding-left: 15px; padding-bottom: 20px">	
+	<a href="{{ url_for('apply_for_group', group_id=group.id)}}" class="btn btn-success"><i class="glyphicon glyphicon-plus"></i> Apply for group</a>
+	</div>
 {%endif%}
 <div class="modal fade" id="AddPost">
     		<div class="modal-dialog">
         		<div class="modal-content">
            			 <div class="modal-header">
                 		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                		<h4 class="modal-title">Create Post</h4>
+                		<h4 class="modal-title" align="center">Create Post</h4>
             		</div>
            		<div class="modal-body">
                     {%if current_user in users or current_user.id == group.admin_id %}
                     	 <form method="POST" role="form" id="theForm" enctype="multipart/form-data">
-    					 <br><textarea name="post_content" style="width:550px;height:50px;" placeholder = "Content"></textarea><br>	
-						 <br><input class="form-control center" style="text-align: center;margin: 0 auto;" name ="post_file" type = "file" placeholder = "File"><br>
+    					 <br><textarea name="post_content" style="width:568px;height:50px;" placeholder = "Content"></textarea><br>
+						 <input class="form-control center" style="text-align: center" name ="post_file" type = "file" placeholder = "File"></br>
 						 <label for="access">Access: &nbsp; </label>
 
 							<select name="access" id="access">
-  							<option value="private">Private(for group only)</option>
+  							<option value="private">Private (for group only)</option>
   							<option value="public">Public</option>
 							</select>
 							</br>
-                    	 <button type="submit" name="post" class="btn btn-primary"> <i class="glyphicon glyphicon-plus"></i> Add your new post </button>						                               		
+							</br>
+						 <div class="col-lg-offset-4">			
+                    	 <button type="submit" name="post" class="btn btn-success"> <i class="glyphicon glyphicon-plus"></i> Add your new post </button>						                               		
+                		 </div>
                 		 </form>
                 	{%endif%}	 
             </div>

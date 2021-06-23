@@ -16,6 +16,25 @@
 						</br>
 						<strong> Participant count: </strong> {{event.current_guests}}/{{event.max_guests}}
 						{% endif %}
+						
+						<div>  
+							<div style="padding-bottom:5px">
+  							<button type="button" class="btn btn-info" data-toggle="collapse" data-target="#demo">Collapse guests</button>
+  							</div>	
+  								<div id="demo" class="collapse">
+    								{% for guest in event.guests %}
+										<div class="panel panel-primary post" id="r1">
+    										<div class="panel-body">
+    	    									<div class="row post">
+    	        									<div class="col-lg-6">
+    	            									<a href="{{ url_for('inspect_profile', user_id=guest.id) }}"> <i class="glyphicon glyphicon-user"></i> {{guest.name}}</a></br>
+    	    										</div>
+    											</div>
+											</div>	
+										</div>
+									{% endfor %}
+								</div>	
+							</div>						
 					</div>
                     <br/>
                     <br/>
@@ -26,15 +45,15 @@
 </div>
 
 {% if user.active and user.id == event.user_id %}
-    <a href="{{ url_for('update_event', id=event.id) }}" class="btn btn-primary"><i class="glyphicon glyphicon-settings"></i> Update </a>
-    <a href="/delete_event/{{ event.id }}" class="btn btn-primary"><i class="glyphicon glyphicon-remove"></i> Delete </a>
+    <a href="{{ url_for('update_event', id=event.id) }}" class="btn btn-success"><i class="glyphicon glyphicon-cog"></i> Update </a>
+    <a href="/delete_event/{{ event.id }}" class="btn btn-danger"><i class="glyphicon glyphicon-remove"></i> Delete </a>
     {% if event.current_guests < event.max_guests %}
-	<a href="{{ url_for('invite_to_event', event_id=event.id) }}" class="btn btn-primary"><i class="glyphicon glyphicon-pencil"></i> Invite people </a>
+	<a href="{{ url_for('invite_to_event', event_id=event.id) }}" class="btn btn-info"><i class="glyphicon glyphicon-pencil"></i> Invite people </a>
 	{% endif %}
 {% elif user.id != event.user_id and event.access == "public" and current_user not in event.guests%}
 	<form method="POST" role="form" id="decline">
 		<input type="hidden" id="userId" name="event_id" value={{event.id}}>		
-		<button type="submit" name="assign" class="btn btn-primary"> <i class="glyphicon glyphicon-pencil"></i> Assign for event </button>
+		<button type="submit" name="assign" class="btn btn-success"> <i class="glyphicon glyphicon-pencil"></i> Assign for event </button>
 	</form>
 {% endif %}
 
@@ -48,8 +67,8 @@
     	        </div>
     	        
     	        {% if user.active and user.id == post.user_id%}
-    	        <a href="{{url_for('update_post', post_id=post.id)}}" class="btn btn-primary"><i class="glyphicon glyphicon-pencil"></i> Update</a>
-    	        <a href="{{url_for('delete_post', id=post.id )}}" class="btn btn-primary"><i class="glyphicon glyphicon-remove"></i> Delete</a>
+    	        <a href="{{url_for('update_post', post_id=post.id)}}" class="btn btn-success"><i class="glyphicon glyphicon-pencil"></i> Update</a>
+    	        <a href="{{url_for('delete_post', id=post.id )}}" class="btn btn-danger"><i class="glyphicon glyphicon-remove"></i> Delete</a>
     	        {% endif %}
     	        
     	        <br/>
@@ -68,7 +87,7 @@
 
 <div class="row">
     <div class="col-lg-3">
-        <a href=#AddPost data-toggle="modal", class="btn btn-primary" title="Create Post">
+        <a href=#AddPost data-toggle="modal", class="btn btn-success" title="Create Post">
         <i class="glyphicon glyphicon-pushpin"></i> Add Post</a>
     </div>
 </div>
@@ -79,11 +98,11 @@
         <div class="modal-content">
            	<div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title">Create Post</h4>
+                <h4 class="modal-title" align="center">Create Post</h4>
             </div>
            	<div class="modal-body">
                    	 <form method="POST" role="form" id="theForm" enctype="multipart/form-data">
-    					 <br><textarea name="post_content" style="width:550px;height:50px;" placeholder = "Content"></textarea><br>	
+    					 <br><textarea name="post_content" style="width:568px;height:50px;" placeholder = "Content"></textarea><br>	
 						 <br><input class="form-control center" style="text-align: center;margin: 0 auto;" name ="post_file" type = "file" placeholder = "File"><br>
 						 <label for="access">Access:</label>
 
@@ -92,7 +111,9 @@
   							<option value="public">Public</option>
 							</select>
 							</br>
-                    	 <button type="submit" name="post" class="btn btn-primary"> <i class="glyphicon glyphicon-plus"></i> Add your new post </button>						                               		
+						<div class="col-lg-offset-4" style="padding-top: 7px">	
+                    	 <button type="submit" name="post" class="btn btn-success"> <i class="glyphicon glyphicon-plus"></i> Add your new post </button>						                               		
+                		</div>
                 	</form>
             </div>
         </div>
@@ -101,9 +122,9 @@
 {% endif %} 
 
 {% if current_user.active %}
-<div class="row">
+<div class="row" style="padding-bottom: 20px; padding-top: 5px">
     <div class="col-lg-3">
-        <a href=#newModal data-toggle="modal", class="btn btn-primary" title="Create Group">
+        <a href=#newModal data-toggle="modal", class="btn btn-info" title="Create Group">
             <i class="glyphicon glyphicon-pushpin"></i> Link to post</a>
     </div>
 </div>
@@ -123,7 +144,7 @@
                 		<br><input type="radio" id="link" name="event" value="{{post.id}}">
 						<label for="link">{{post.content}}</label></br>
                     {% endfor %}
-                    <input type="submit" value="Submit">
+                    <button type="submit" class="btn btn-success" value="Submit"><i class="glyphicon glyphicon-plus"></i>Submit</button>
                 </form>
             </div>
         </div>

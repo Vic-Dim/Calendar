@@ -12,10 +12,10 @@
                         	</br>
                         	<form method="POST" role="form">
                         		{% for option in survey.options %} 
-                        		<input type="radio" name="option_id" value="{{option.id}}">{{option.content}}<br>
+                        		<input type="radio" name="option_id" value="{{option.id}}"> {{option.content}}<br>
                         		{% endfor %}
                         		<input type="hidden" id="postId" name="poll_id" value={{survey.poll.id}}>
-                        		<br><button type="submit" name="poll-first" class="btn btn-primary"> <i class="glyphicon glyphicon-plus"></i> Submit answer </button></br>	
+                        		<br><button type="submit" name="poll-first" class="btn btn-success"> <i class="glyphicon glyphicon-plus"></i> Submit answer </button></br>	
                         	</form>
                         </div>	
                     </div>    
@@ -37,13 +37,13 @@
                         	<form method="POST" role="form">
                         		{% for option in survey.options %} 
                         			{% if option.id == survey.poll.current_option %}
-                        				<input type="radio" name="option_id" value="{{option.id}}" checked="checked"><strong>{{option.content}} - {{option.count}}</strong><br>
+                        				<input type="radio" name="option_id" value="{{option.id}}" checked="checked"><strong> {{option.content}} - {{option.count}}</strong><br>
                         			{% else %}
-                        				<input type="radio" name="option_id" value="{{option.id}}">{{option.content}} {{survey.current_option}} - {{option.count}}<br>
+                        				<input type="radio" name="option_id" value="{{option.id}}"> {{option.content}} {{survey.current_option}} - {{option.count}}<br>
                         			{% endif %}	                        				
                         		{% endfor %}
                         		<input type="hidden" id="postId" name="poll_id" value={{survey.poll.id}}>
-                        		<br><button type="submit" name="poll-change" class="btn btn-primary"> <i class="glyphicon glyphicon-plus"></i> Change vote </button></br>	
+                        		<br><button type="submit" name="poll-change" class="btn btn-success"> <i class="glyphicon glyphicon-cog"></i> Change vote </button></br>	
                         	</form>
                         </div>	
                     </div>    
